@@ -25,8 +25,10 @@ public class TimeAList {
         // TODO: YOUR CODE HERE
         AList<Integer> Ns = new AList<Integer>();
         AList<Double> times = new AList<Double>();
+        AList<Integer> opCounts = new AList<>();
         for (int i = 0; i<=7 ;i++) {
             Ns.addLast(1000*(int)Math.pow(2,i));
+            opCounts.addLast(Ns.getLast());
             AList<Integer> target = new AList<>();
             Stopwatch sw = new Stopwatch();
             for (int ops = 0; ops<Ns.getLast(); ops++) {
@@ -36,6 +38,6 @@ public class TimeAList {
             times.addLast(timeInSeconds);
         }
         System.out.println("Timing table for addLast");
-        printTimingTable(Ns,times,Ns);
+        printTimingTable(Ns,times,opCounts);
     }
 }
