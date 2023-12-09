@@ -1,6 +1,6 @@
 package deque;
 
-public class LinkedListDeque<T> {
+public class LinkedListDeque<T> implements Deque<T> {
     private class ListNode {
         public  ListNode pre;
         public T item;
@@ -34,33 +34,42 @@ public class LinkedListDeque<T> {
             addLast((T)other.get(i));
         }
     }
+
+    @Override
     public void addFirst(T item) {
         ListNode new_node = new ListNode(front_sentinel, item, front_sentinel.next);
         front_sentinel.next = new_node;
         new_node.next.pre = new_node;
         size += 1;
     }
+
+    @Override
     public void addLast(T item) {
         ListNode new_node = new ListNode(last_sentinel.pre, item, last_sentinel);
         last_sentinel.pre = new_node;
         new_node.pre.next = new_node;
         size += 1;
     }
-    public boolean isEmpty() {
+    /*public boolean isEmpty() {
         return size == 0;
-    }
+    }*/
+
+    @Override
     public int size() {
         return size;
     }
+
+    @Override
     public void printDeque() {
         ListNode p = front_sentinel.next;
         while (p != last_sentinel.pre) {
             System.out.print(p.item + " ");
             p = p.next;
         }
-        System.out.print(p.item);
-        System.out.println();
+        System.out.println(p.item);
     }
+
+    @Override
     public T removeFirst() {
         if (isEmpty()) {
             return null;
@@ -72,6 +81,7 @@ public class LinkedListDeque<T> {
         return first.item;
     }
 
+    @Override
     public T removeLast() {
         if (isEmpty()) {
             return null;
@@ -83,6 +93,7 @@ public class LinkedListDeque<T> {
         return last.item;
     }
 
+    @Override
     public T get(int index) {
         if (index > size - 1) {
             return null;
@@ -93,12 +104,14 @@ public class LinkedListDeque<T> {
         }
         return p.item;
     }
+
     public T getRecursive(int index) {
         if (index > size - 1) {
             return null;
         }
         return getRecursive_helper(index, front_sentinel.next);
     }
+
     private T getRecursive_helper(int index, ListNode p){
         if (index == 0){
             return p.item;
