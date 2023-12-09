@@ -9,7 +9,7 @@ public class ArrayDeque<T> {
     public ArrayDeque() {
         items = (T[]) new Object[8];
         size = 0;
-        first = -1;
+        first = -1% items.length;
         last = 0;
     }
     public  ArrayDeque(ArrayDeque other) {
