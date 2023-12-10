@@ -1,6 +1,6 @@
 package deque;
 
-import afu.org.checkerframework.checker.oigj.qual.O;
+//import afu.org.checkerframework.checker.oigj.qual.O;
 
 public class ArrayDeque<T> implements Deque<T> {
     private T[] items;
