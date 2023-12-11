@@ -1,8 +1,9 @@
 package deque;
 
+import java.util.Iterator;
 //import afu.org.checkerframework.checker.oigj.qual.O;
 
-public class ArrayDeque<T> implements Deque<T> {
+public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
     private T[] items;
     private int size;
     private int first;
@@ -118,6 +119,30 @@ public class ArrayDeque<T> implements Deque<T> {
             return new_index % items.length;
         } else {
             return new_index % items.length + items.length;
+        }
+    }
+
+    public Iterator<T> iterator() {
+        return new ArrayDequeIterator();
+    }
+
+    private class ArrayDequeIterator implements Iterator<T> {
+        private int pos;
+
+        public  ArrayDequeIterator() {
+            pos = 0;
+        }
+
+        @Override
+        public boolean hasNext() {
+            return pos <size;
+        }
+
+        @Override
+        public T next() {
+            T returnItem = get(pos);
+            pos += 1;
+            return returnItem;
         }
     }
 }

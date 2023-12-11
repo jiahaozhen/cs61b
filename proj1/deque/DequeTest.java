@@ -68,4 +68,15 @@ public class DequeTest {
         L.printDeque();
         B.printDeque();
     }
+
+    @Test
+    public void IteratorTest() {
+        ArrayDeque<Integer> L = new ArrayDeque<>();
+        L.addFirst(10);
+        L.addFirst(15);
+        L.addFirst(20);
+        for (int item : L) {
+            System.out.println(item);
+        }
+    }
 }
