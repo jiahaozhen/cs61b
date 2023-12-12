@@ -11,24 +11,24 @@ public class MaxArrayDeque<T> extends ArrayDeque<T> {
         if (isEmpty()) {
             return null;
         }
-        T max_item = get(0);
+        T maxItem = get(0);
         for (int index = 1; index < size(); index++) {
-            if (comparator.compare(get(index), max_item) > 0) {
-                max_item = get(index);
+            if (comparator.compare(get(index), maxItem) > 0) {
+                maxItem = get(index);
             }
         }
-        return max_item;
+        return maxItem;
     }
     public T max(Comparator<T> c) {
         if (isEmpty()) {
             return null;
         }
-        T max_item = get(0);
+        T maxItem = get(0);
         for (int index = 1; index < size(); index++) {
-            if (c.compare(get(index), max_item) > 0) {
-                max_item = get(index);
+            if (c.compare(get(index), maxItem) > 0) {
+                maxItem = get(index);
             }
         }
-        return max_item;
+        return maxItem;
     }
 }
