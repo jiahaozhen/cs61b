@@ -27,7 +27,7 @@ public class LinkedListDeque<T> implements Deque<T>, Iterable<T> {
         lastSentinel = new ListNode(frontSentinel, null);
         frontSentinel.next = lastSentinel;
     }
-    public LinkedListDeque(LinkedListDeque other) {
+    /*public LinkedListDeque(LinkedListDeque other) {
         frontSentinel = new ListNode(null, null);
         lastSentinel = new ListNode(frontSentinel, null);
         frontSentinel.next = lastSentinel;
@@ -35,7 +35,7 @@ public class LinkedListDeque<T> implements Deque<T>, Iterable<T> {
         for (int i = 0; i < other.size(); i++) {
             addLast((T) other.get(i));
         }
-    }
+    }*/
 
     @Override
     public void addFirst(T item) {
@@ -145,5 +145,22 @@ public class LinkedListDeque<T> implements Deque<T>, Iterable<T> {
             pos += 1;
             return returnItem;
         }
+    }
+
+    public boolean equals(Object O) {
+        if (!(O instanceof Deque)) {
+            return false;
+        }
+        if (((Deque<?>) O).size() != size()) {
+            return false;
+        }
+        for (int i = 0; i < size(); i++) {
+            if (get(i).equals(((Deque<?>) O).get(i))) {
+                continue;
+            } else {
+                return false;
+            }
+        }
+        return true;
     }
 }

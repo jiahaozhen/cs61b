@@ -15,7 +15,7 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
         first = minusOne(0);
         last = 0;
     }
-    public  ArrayDeque(ArrayDeque other) {
+    /*public  ArrayDeque(ArrayDeque other) {
         items = (T[]) new Object[8];
         size = 0;
         first = minusOne(0);
@@ -23,7 +23,7 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
         for (int index = 0; index < other.size; index++) {
             addLast((T) other.get(index));
         }
-    }
+    }*/
 
     @Override
     public void addLast(T item) {
@@ -144,5 +144,22 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
             pos += 1;
             return returnItem;
         }
+    }
+
+    public boolean equals(Object O) {
+        if (!(O instanceof Deque)) {
+            return false;
+        }
+        if (((Deque<?>) O).size() != size()) {
+            return false;
+        }
+        for (int i = 0; i < size(); i++) {
+            if (get(i).equals(((Deque<?>) O).get(i))) {
+                continue;
+            } else {
+                return false;
+            }
+        }
+        return true;
     }
 }

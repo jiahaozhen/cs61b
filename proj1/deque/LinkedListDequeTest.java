@@ -137,4 +137,20 @@ public class LinkedListDequeTest {
 
 
     }
+
+    @Test
+    /* Test the equal method. */
+    public void equalTest() {
+        LinkedListDeque<Integer> lld1 = new LinkedListDeque<Integer>();
+        for (int i = 0; i < 1000; i++) {
+            lld1.addLast(i);
+        }
+        LinkedListDeque<Integer> ad2 = new LinkedListDeque<Integer>();
+        for (int i = 0; i < 1000; i++) {
+            ad2.addLast(i);
+        }
+        ad2 = null;
+        //assertEquals("should be the same", lld1, ad2);
+        assertNotEquals("should not be the same", lld1, ad2);
+    }
 }
