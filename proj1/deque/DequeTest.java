@@ -59,11 +59,13 @@ public class DequeTest {
                     continue;
                 }
                 int removeVal = L.removeFirst();
-                int removeVal_1 = B.removeFirst();
+                int removeVal1 = B.removeFirst();
                 //System.out.println("removeFirst: " + removeVal);
-                assertEquals(removeVal, removeVal_1);
+                assertEquals(removeVal, removeVal1);
             } else if (operationNumber == 6) {
-                if (L.isEmpty()) {continue;}
+                if (L.isEmpty()) {
+                    continue;
+                }
                 int randIndex = StdRandom.uniform(0, L.size());
                 //System.out.println("getRecursive: " + randIndex);
                 //System.out.println("in dll: " + L.get(randIndex));

@@ -47,9 +47,9 @@ public class LinkedListDeque<T> implements Deque<T>, Iterable<T> {
 
     @Override
     public void addLast(T item) {
-        ListNode new_node = new ListNode(lastSentinel.pre, item, lastSentinel);
-        lastSentinel.pre = new_node;
-        new_node.pre.next = new_node;
+        ListNode newNode = new ListNode(lastSentinel.pre, item, lastSentinel);
+        lastSentinel.pre = newNode;
+        newNode.pre.next = newNode;
         size += 1;
     }
     /*public boolean isEmpty() {
@@ -118,7 +118,7 @@ public class LinkedListDeque<T> implements Deque<T>, Iterable<T> {
         if (index == 0) {
             return p.item;
         } else {
-            return getRecursiveHelper(index-1, p.next);
+            return getRecursiveHelper(index - 1, p.next);
         }
     }
 
