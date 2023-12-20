@@ -1,5 +1,6 @@
 package bstmap;
 
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
@@ -91,41 +92,74 @@ public class BSTMap<K extends Comparable, V> implements Map61B<K, V>{
 
     @Override
     public Set<K> keySet() {
-        throw new UnsupportedOperationException("this function is not supported");
+        Set<K> keyset = new HashSet<>();
+        keySetRecursion(keyset, root);
+        return keyset;
+    }
+
+    private void keySetRecursion(Set<K> keyset, BSTNode root) {
+        if (root == null) {
+            return;
+        }
+        keySetRecursion(keyset, root.leftTree);
+        keyset.add(root.key);
+        keySetRecursion(keyset, root.rightTree);
     }
 
     @Override
     public V remove(K key) {
-        throw new UnsupportedOperationException("this function is not supported");
-        //return null;
+        V value;
+        if (!containsKey(key)) {
+            return null;
+        } else {
+            value = get(key);
+        }
+        root = removeRecursion(key, root);
+        size -= 1;
+        return value;
+    }
+
+    private BSTNode removeRecursion(K key, BSTNode root) {
+        if (root == null) {
+            return null;
+        } else if (root.key.compareTo(key) > 0) {
+            root.leftTree = removeRecursion(key, root.leftTree);
+        } else if (root.key.compareTo(key) < 0) {
+            root.rightTree = removeRecursion(key, root.rightTree);
+        } else {
+            if (root.leftTree == null) {
+                return root.rightTree;
+            }
+            if (root.rightTree == null) {
+                return root.leftTree;
+            }
+            BSTNode originNode = root;
+            root = getMinChild(root.rightTree);
+            root.leftTree = originNode.leftTree;
+            root.rightTree = removeRecursion(root.key, root.rightTree);
+        }
+        return root;
+    }
+
+    private BSTNode getMinChild(BSTNode root) {
+        BSTNode p = root;
+        while (p.leftTree != null) {
+            p = p.leftTree;
+        }
+        return p;
     }
 
     @Override
     public V remove(K key, V value) {
-        throw new UnsupportedOperationException("this function is not supported");
-        //return null;
+        if (get(key) != value) {
+            return null;
+        }
+        return remove(key);
     }
 
     @Override
     public Iterator<K> iterator() {
-        throw new UnsupportedOperationException("this function is not supported");
-    }
-
-    private class BSTMapIter implements Iterator<K> {
-
-        private int index;
-        public BSTMapIter() {
-
-        }
-        @Override
-        public boolean hasNext() {
-
-        }
-
-        @Override
-        public K next() {
-            return null;
-        }
+        return keySet().iterator();
     }
 
     public void printInOrder() {
