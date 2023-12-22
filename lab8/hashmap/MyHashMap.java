@@ -150,7 +150,7 @@ public class MyHashMap<K, V> implements Map61B<K, V> {
     @Override
     public Set<K> keySet() {
         HashSet<K> set = new HashSet<>();
-        for (K k : this) {
+        for (K k: this) {
             set.add(k);
         }
         return set;
@@ -214,28 +214,32 @@ public class MyHashMap<K, V> implements Map61B<K, V> {
         }
         @Override
         public boolean hasNext() {
+            if (!NodeIterator.hasNext() && bucketIndex < buckets.length - 1) {
+                bucketIndex += 1;
+                while (buckets[bucketIndex].isEmpty()){
+                    if (bucketIndex < buckets.length -1) {
+                        bucketIndex += 1;
+                    } else {
+                        return false;
+                    }
+                }
+                NodeIterator = buckets[bucketIndex].iterator();
+            }
             return NodeIterator.hasNext();
         }
 
         @Override
         public Node next() {
-            Node next = NodeIterator.next();
-            if (!NodeIterator.hasNext() && bucketIndex < buckets.length - 1){
-                bucketIndex += 1;
-                NodeIterator = buckets[bucketIndex].iterator();
-            }
-            return next;
+            return NodeIterator.next();
         }
     }
 
     private class HashMapIterator implements Iterator<K> {
 
-        private int bucketIndex;
         private Iterator<Node> NodeIterator;
 
         public HashMapIterator() {
-            bucketIndex = 0;
-            NodeIterator = buckets[bucketIndex].iterator();
+            NodeIterator = new HashMapNodeIterator();
         }
         @Override
         public boolean hasNext() {
@@ -244,12 +248,7 @@ public class MyHashMap<K, V> implements Map61B<K, V> {
 
         @Override
         public K next() {
-            Node next = NodeIterator.next();
-            if (!NodeIterator.hasNext() && bucketIndex < buckets.length - 1){
-                bucketIndex += 1;
-                NodeIterator = buckets[bucketIndex].iterator();
-            }
-            return next.key;
+            return NodeIterator.next().key;
         }
     }
 
