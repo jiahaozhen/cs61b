@@ -32,7 +32,6 @@ public class Commit implements Serializable {
     private String parent2;
     private HashMap<String, String> filenameToBlob;
 
-    /* TODO: fill in the rest of this class. */
     public Commit(String message, Commit parent1, Commit parent2) {
         this.message = message;
         timestamp = new Date();
@@ -60,6 +59,27 @@ public class Commit implements Serializable {
             return true;
         } else {
             return false;
+        }
+    }
+
+    public void setFilenameToBlob(HashMap<String, String> FilenameToBlob) {
+        this.filenameToBlob = FilenameToBlob;
+    }
+
+    public HashMap<String, String> getFilenameToBlob() {
+        return filenameToBlob;
+    }
+
+    public void updateFile() {
+        Blob stagedFileBlob = null;
+        List<String> fileStaged = plainFilenamesIn(Repository.STAGING_DIR);
+        for (String stagedFileName : fileStaged) {
+            File stagedFile = join(Repository.STAGING_DIR, stagedFileName);
+            stagedFileBlob = readObject(stagedFile, Blob.class);
+            filenameToBlob.put(stagedFileBlob.getFileName(), stagedFileName);
+            /* move the file in staging dir to blobs*/
+            restrictedDelete(stagedFile);
+            stagedFileBlob.saveFile(Repository.BLOB_DIR);
         }
     }
 }

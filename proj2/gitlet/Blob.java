@@ -34,11 +34,12 @@ public class Blob implements Serializable {
     }
     public void stageFile() {
         HashMap<String, String> fileNameToSha1 = new HashMap<>();
-        Blob stagedFile = null;
-        List<String> fileStaged = plainFilenamesIn(Repository.STAGING_AREA);
+        Blob stagedFileBlob = null;
+        List<String> fileStaged = plainFilenamesIn(Repository.STAGING_DIR);
         for (String stagedFileName : fileStaged) {
-            stagedFile = readObject(join(Repository.STAGING_AREA, stagedFileName), Blob.class);
-            fileNameToSha1.put(stagedFile.getFileName(), stagedFileName);
+            File stagedFile = join(Repository.STAGING_DIR, stagedFileName);
+            stagedFileBlob = readObject(stagedFile, Blob.class);
+            fileNameToSha1.put(stagedFileBlob.getFileName(), stagedFileName);
         }
         /* now we have a hashmap from the staged file true name to its blob name */
         if (fileNameToSha1.containsKey(fileName)) { /* if we have the file of the same name */
@@ -51,6 +52,6 @@ public class Blob implements Serializable {
             return;/* don't do anything if true*/
         }
         /* create the new one in the staging directory */
-        saveFile(Repository.STAGING_AREA);
+        saveFile(Repository.STAGING_DIR);
     }
 }

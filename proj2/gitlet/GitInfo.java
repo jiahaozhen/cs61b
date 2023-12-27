@@ -6,11 +6,11 @@ import java.io.Serializable;
 import static gitlet.Utils.*;
 
 public class GitInfo implements Serializable {
-    public String branch1Name;
-    public String branch2Name;
-    public String branch1Commit;
-    public String branch2Commit;
-    public String HEAD;
+    private String branch1Name;
+    private String branch2Name;
+    private String branch1Commit;
+    private String branch2Commit;
+    private String HEAD;
 
     public GitInfo(String branch1Name, Commit initCommit) {
         this.branch1Name = branch1Name;
@@ -28,5 +28,13 @@ public class GitInfo implements Serializable {
             throw new RuntimeException(e);
         }
         writeObject(saveFile, this);
+    }
+
+    public void changeHead(Commit commit) {
+        this.HEAD = sha1(commit);
+    }
+
+    public String getHEAD() {
+        return HEAD;
     }
 }

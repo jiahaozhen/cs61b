@@ -33,9 +33,10 @@ public class Repository {
     public static final File BLOB_DIR = join(GITLET_DIR, "blobs");
     /** The git info file. */
     public static final File GIT_INFO = join(GITLET_DIR, "gitInfo");
-    public static final File STAGING_AREA = join(GITLET_DIR, "staging");
+    public static final File STAGING_DIR = join(GITLET_DIR, "staging");
 
-    /* TODO: fill in the rest of this class. */
+    private static GitInfo gitInfo;
+
     public static void init() {
         if (GITLET_DIR.exists()) {
             System.out.println("A Gitlet version-control system already exists in the current directory.");
@@ -44,11 +45,11 @@ public class Repository {
         GITLET_DIR.mkdir();
         COMMIT_DIR.mkdir();
         BLOB_DIR.mkdir();
-        STAGING_AREA.mkdir();
+        STAGING_DIR.mkdir();
         Commit initCommit = new Commit("initial commit", null, null);
         initCommit.setDate(new Date(0));
         initCommit.saveCommit();
-        GitInfo gitInfo = new GitInfo("master", initCommit);
+        gitInfo = new GitInfo("master", initCommit);
         gitInfo.saveGitInfo();
     }
 
@@ -63,6 +64,29 @@ public class Repository {
         stagingBlob.stageFile();
     }
 
+    public static void commit(String message) {
+        checkGitletExist();
+        /* message should not be empty*/
+        if (message.isBlank()) {
+            System.out.println("Please enter a commit message.");
+            System.exit(0);
+        }
+        /* no file to commit */
+        if (plainFilenamesIn(STAGING_DIR) == null) {
+            System.out.println("No changes added to the commit.");
+            System.exit(0);
+        }
+        /* default setting */
+        Commit newCommit = new Commit(message, getCurrentCommit(), null);
+        newCommit.setFilenameToBlob(getCurrentCommit().getFilenameToBlob());
+        /* commit the staged file*/
+        newCommit.updateFile();
+        newCommit.saveCommit();
+        /* change the HEAD */
+        gitInfo.changeHead(newCommit);
+        gitInfo.saveGitInfo();
+    }
+
     private static void checkGitletExist() {
         if (!GITLET_DIR.exists()) {
             System.out.println("Not in an initialized Gitlet directory.");
@@ -72,7 +96,7 @@ public class Repository {
 
     public static Commit getCurrentCommit() {
         GitInfo presentInfo = readObject(GIT_INFO, GitInfo.class);
-        String HEAD = presentInfo.HEAD;
+        String HEAD = presentInfo.getHEAD();
         return getCommitFromSha1(HEAD);
     }
 
