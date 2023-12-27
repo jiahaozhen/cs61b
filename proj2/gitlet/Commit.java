@@ -55,4 +55,11 @@ public class Commit implements Serializable {
         writeObject(commitFile, this);
     }
 
+    public boolean haveSameFile(String blobSha1) {
+        if (filenameToBlob.containsValue(blobSha1)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
 }

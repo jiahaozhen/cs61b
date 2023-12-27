@@ -23,8 +23,11 @@ public class Main {
                 break;
             case "add":
                 // TODO: handle the `add [filename]` command
+                validateArgs(args, 2);
+                Repository.add(args[1]);
                 break;
             // TODO: FILL THE REST IN
+            case "commit":
             default:
                 System.out.println("No command with that name exists.");
                 System.exit(0);

@@ -1,8 +1,9 @@
 package gitlet;
 
 import java.io.File;
-import java.io.Serializable;
 import java.util.Date;
+import java.util.List;
+
 import static gitlet.Utils.*;
 
 // TODO: any imports you need here
@@ -32,6 +33,7 @@ public class Repository {
     public static final File BLOB_DIR = join(GITLET_DIR, "blobs");
     /** The git info file. */
     public static final File GIT_INFO = join(GITLET_DIR, "gitInfo");
+    public static final File STAGING_AREA = join(GITLET_DIR, "staging");
 
     /* TODO: fill in the rest of this class. */
     public static void init() {
@@ -41,6 +43,8 @@ public class Repository {
         }
         GITLET_DIR.mkdir();
         COMMIT_DIR.mkdir();
+        BLOB_DIR.mkdir();
+        STAGING_AREA.mkdir();
         Commit initCommit = new Commit("initial commit", null, null);
         initCommit.setDate(new Date(0));
         initCommit.saveCommit();
@@ -48,10 +52,38 @@ public class Repository {
         gitInfo.saveGitInfo();
     }
 
+    public static void add(String fileName) {
+        checkGitletExist();
+        File addFile = join(CWD, fileName);
+        if (!addFile.exists()) {
+            System.out.println("File does not exist.");
+            System.exit(0);
+        }
+        Blob stagingBlob = new Blob(fileName);
+        stagingBlob.stageFile();
+    }
+
     private static void checkGitletExist() {
         if (!GITLET_DIR.exists()) {
             System.out.println("Not in an initialized Gitlet directory.");
+            System.exit(0);
         }
+    }
+
+    public static Commit getCurrentCommit() {
+        GitInfo presentInfo = readObject(GIT_INFO, GitInfo.class);
+        String HEAD = presentInfo.HEAD;
+        return getCommitFromSha1(HEAD);
+    }
+
+    private static Commit getCommitFromSha1(String sha1Code) {
+        List<String> allCommits = plainFilenamesIn(Repository.COMMIT_DIR);
+        for (String commitName : allCommits) {
+            if (commitName.equals(sha1Code)) {
+                return readObject(join(Repository.COMMIT_DIR, commitName), Commit.class);
+            }
+        }
+        return null;
     }
 
 
