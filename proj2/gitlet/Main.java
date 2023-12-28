@@ -26,6 +26,9 @@ public class Main {
             case "commit":
                 validateArgs(args, 2);
                 Repository.commit(args[1]);
+            case "rm":
+                validateArgs(args, 2);
+                Repository.rm(args[1]);
             default:
                 System.out.println("No command with that name exists.");
                 System.exit(0);

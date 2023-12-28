@@ -44,7 +44,7 @@ public class Blob implements Serializable {
         /* now we have a hashmap from the staged file true name to its blob name */
         if (fileNameToSha1.containsKey(fileName)) { /* if we have the file of the same name */
             /* delete the old one */
-            restrictedDelete(fileNameToSha1.get(fileName));
+            restrictedDelete(join(Repository.STAGING_DIR, fileNameToSha1.get(fileName)));
         }
         /* check if the file is the same in the current commit */
         Commit currentCommit = Repository.getCurrentCommit();

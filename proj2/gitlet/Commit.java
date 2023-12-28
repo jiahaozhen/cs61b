@@ -18,7 +18,6 @@ import static gitlet.Utils.*;
  */
 public class Commit implements Serializable {
     /**
-     * TODO: add instance variables here.
      *
      * List all instance variables of the Commit class here with a useful
      * comment above them describing what that variable represents and how that
@@ -81,5 +80,13 @@ public class Commit implements Serializable {
             restrictedDelete(stagedFile);
             stagedFileBlob.saveFile(Repository.BLOB_DIR);
         }
+        GitInfo gitInfo = readObject(Repository.GIT_INFO, GitInfo.class);
+        for (String rmFileName : gitInfo.getRmFileList()) {
+            filenameToBlob.remove(rmFileName);
+        }
+    }
+
+    public boolean haveFile(String fileName) {
+        return filenameToBlob.containsKey(fileName);
     }
 }

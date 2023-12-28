@@ -1,5 +1,7 @@
 package gitlet;
 
+import org.checkerframework.checker.units.qual.C;
+
 import java.io.File;
 import java.util.Date;
 import java.util.List;
@@ -34,7 +36,6 @@ public class Repository {
     /** The git info file. */
     public static final File GIT_INFO = join(GITLET_DIR, "gitInfo");
     public static final File STAGING_DIR = join(GITLET_DIR, "staging");
-
     private static GitInfo gitInfo;
 
     public static void init() {
@@ -60,6 +61,9 @@ public class Repository {
             System.out.println("File does not exist.");
             System.exit(0);
         }
+        gitInfo = readObject(GIT_INFO, GitInfo.class);
+        gitInfo.removaRmFile(fileName);
+        gitInfo.saveGitInfo();
         Blob stagingBlob = new Blob(fileName);
         stagingBlob.stageFile();
     }
@@ -83,8 +87,47 @@ public class Repository {
         newCommit.updateFile();
         newCommit.saveCommit();
         /* change the HEAD */
+        gitInfo = readObject(GIT_INFO, GitInfo.class);
         gitInfo.changeHead(newCommit);
         gitInfo.saveGitInfo();
+    }
+
+    /** Unstage the file if it is currently staged for addition.
+     * If the file is tracked in the current commit, stage it for removal
+     * and remove the file from the working directory
+     * if the user has not already done so
+     * (do not remove it unless it is tracked in the current commit).
+     * */
+    public static void rm(String fileName) {
+        checkGitletExist();
+        /* if it's staged */
+        Blob stagedFileBlob;
+        boolean alreadyStaged = false;
+        List<String> fileStaged = plainFilenamesIn(Repository.STAGING_DIR);
+        for (String stagedFileName : fileStaged) {
+            File stagedFile = join(Repository.STAGING_DIR, stagedFileName);
+            stagedFileBlob = readObject(stagedFile, Blob.class);
+            if (stagedFileBlob.getFileName().equals(fileName)) {
+                restrictedDelete(stagedFile);
+                alreadyStaged = true;
+                break;
+            }
+        }
+        Commit currentCommit = getCurrentCommit();
+        /* failure cases */
+        if (!alreadyStaged && !currentCommit.haveFile(fileName)) {
+            System.out.println("No reason to remove the file.");
+            System.exit(0);
+        }
+        /* if it's in the current commit */
+        if (currentCommit.haveFile(fileName)) {
+            /* stage it for removal  store the filename in gitInfo*/
+            gitInfo = readObject(GIT_INFO, GitInfo.class);
+            gitInfo.addRmFile(fileName);
+            gitInfo.saveGitInfo();
+            /* delete from working directory */
+            restrictedDelete(join(CWD, fileName));
+        }
     }
 
     private static void checkGitletExist() {
