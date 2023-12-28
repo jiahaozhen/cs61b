@@ -29,6 +29,12 @@ public class Main {
             case "rm":
                 validateArgs(args, 2);
                 Repository.rm(args[1]);
+            case "log":
+                validateArgs(args, 1);
+                Repository.log();
+            case "global-log":
+                validateArgs(args, 1);
+                Repository.globalLog();
             default:
                 System.out.println("No command with that name exists.");
                 System.exit(0);

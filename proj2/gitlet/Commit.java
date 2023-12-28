@@ -1,17 +1,15 @@
 package gitlet;
 
-// TODO: any imports you need here
-
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.Date;
 import java.util.*;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 
 import static gitlet.Utils.*;
 
 /** Represents a gitlet commit object.
- *  TODO: It's a good idea to give a description here of what else this Class
  *  does at a high level.
  *
  *  @author Jia Haozhen
@@ -84,6 +82,31 @@ public class Commit implements Serializable {
         for (String rmFileName : gitInfo.getRmFileList()) {
             filenameToBlob.remove(rmFileName);
         }
+    }
+
+    public void printLog() {
+        printCommit();
+        if (!this.parent1.equals(sha1((Object) null))) {
+            Commit parent = Repository.getCommitFromSha1(parent1);
+            parent.printCommit();
+        }
+    }
+
+    void printCommit() {
+        /* print the prompt */
+        System.out.println("===");
+        /* commit id */
+        String id = sha1(this);
+        System.out.println("commit " + id);
+        /* merge information */
+        if (!this.parent2.equals(sha1((Object) null))) {
+            System.out.println("Merge: " + parent1.substring(0, 7) + " " + parent2.substring(0, 7));
+        }
+        /* the date */
+        DateFormat dateFormat = new SimpleDateFormat("EEE MMM d HH:mm:ss yyyy Z", Locale.CHINA);
+        System.out.println(dateFormat.format(timestamp));
+        /* commit message */
+        System.out.println(this.message);
     }
 
     public boolean haveFile(String fileName) {
