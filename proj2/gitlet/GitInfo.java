@@ -8,18 +8,15 @@ import java.util.*;
 import static gitlet.Utils.*;
 
 public class GitInfo implements Serializable {
-    private ArrayList<String> branchNames;
-    private ArrayList<String> branchCommits;
+    private HashMap<String, String> branchMap;
     private String HEAD;
-    private int currentBranchIndex;
+    private String currentBranchName;
 
     public GitInfo(String branchName, Commit initCommit) {
-        branchNames = new ArrayList<>(2);
-        branchNames.add(0, branchName);
-        branchCommits = new ArrayList<>(2);
-        branchCommits.add(0, sha1(initCommit));
         HEAD = sha1(initCommit);
-        currentBranchIndex = 0;
+        branchMap = new HashMap<>(2);
+        branchMap.put(branchName, HEAD);
+        currentBranchName = branchName;
     }
 
     public void saveGitInfo() {
@@ -34,18 +31,22 @@ public class GitInfo implements Serializable {
 
     public void changeHead(Commit commit) {
         this.HEAD = sha1(commit);
-        branchCommits.set(currentBranchIndex, HEAD);
+        branchMap.put(currentBranchName, HEAD);
     }
 
     public String getHEAD() {
         return HEAD;
     }
 
-    public ArrayList<String> getBranchNames() {
-        return branchNames;
+    public HashMap<String, String> getBranchInfo() {
+        return branchMap;
     }
 
-    public int getCurrentBranchIndex() {
-        return currentBranchIndex;
+    public List<String> getBranchNames() {
+        return (List<String>) branchMap.keySet();
+    }
+
+    public String getCurrentBranchName() {
+        return currentBranchName;
     }
 }

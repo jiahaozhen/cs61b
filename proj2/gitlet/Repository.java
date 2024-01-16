@@ -168,12 +168,11 @@ public class Repository {
         System.out.println("=== Branches ===");
         List<String> branchNameList = gitInfo.getBranchNames();
         branchNameList.sort(Comparator.naturalOrder());
-        for (int i = 0; i < branchNameList.size(); i++) {
-            if (i == gitInfo.getCurrentBranchIndex()) {
-                System.out.println("*" + branchNameList.get(i));
-            } else {
-                System.out.println(branchNameList.get(i));
+        for (String branchName : branchNameList) {
+            if (branchName.equals(gitInfo.getCurrentBranchName())) {
+                System.out.print("*");
             }
+            System.out.println(branchName);
         }
         System.out.println();
         /* print the Staged Files */
