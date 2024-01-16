@@ -1,9 +1,6 @@
 package gitlet;
 
-import org.checkerframework.checker.units.qual.C;
-
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import static gitlet.Utils.*;
@@ -139,6 +136,23 @@ public class Repository {
             File currentCommitFile = join(COMMIT_DIR, commitName);
             Commit currentCommit = readObject(currentCommitFile, Commit.class);
             currentCommit.printCommit();
+        }
+    }
+
+    public static void find(String message) {
+        checkGitletExist();
+        boolean commitExist = false;
+        List<String> allCommitName = plainFilenamesIn(Repository.COMMIT_DIR);
+        for (String commitName : allCommitName) {
+            File currentCommitFile = join(COMMIT_DIR, commitName);
+            Commit currentCommit = readObject(currentCommitFile, Commit.class);
+            if (currentCommit.getMessage().equals(message)) {
+                currentCommit.printCommit();
+                commitExist = true;
+            }
+        }
+        if (!commitExist) {
+            System.out.println("Found no commit with that message.");
         }
     }
 

@@ -112,4 +112,8 @@ public class Commit implements Serializable {
     public boolean haveFile(String fileName) {
         return filenameToBlob.containsKey(fileName);
     }
+
+    public String getMessage() {
+        return message;
+    }
 }
