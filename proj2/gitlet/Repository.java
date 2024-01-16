@@ -86,7 +86,7 @@ public class Repository {
         newCommit.saveCommit();
         /* change the HEAD */
         gitInfo = readObject(GIT_INFO, GitInfo.class);
-        gitInfo.changeHead(newCommit);
+        gitInfo.changeStatus(newCommit);
         gitInfo.saveGitInfo();
     }
 
@@ -211,6 +211,73 @@ public class Repository {
         System.out.println();
     }
 
+    public static void checkoutFile(String ID, String fileName) {
+        checkGitletExist();
+        /* get commit */
+        Commit currentCommit = getCommitFromSha1(ID);
+        if (currentCommit == null) {
+            System.out.println("No commit with that id exists.");
+            System.exit(0);
+        }
+        writeFileTOCWD(fileName, currentCommit);
+    }
+
+    public static void checkoutFile(String fileName) {
+        checkGitletExist();
+        /* get the HEAD commit */
+        gitInfo = readObject(GIT_INFO, GitInfo.class);
+        Commit currentCommit = getCurrentCommit();
+        writeFileTOCWD(fileName, currentCommit);
+    }
+
+    public static void checkoutBranch(String branchName) {
+        checkGitletExist();
+        /* branch name exist? */
+        gitInfo = readObject(GIT_INFO, GitInfo.class);
+        if (!gitInfo.haveBranch(branchName)) {
+            System.out.println("No such branch exists.");
+            System.exit(0);
+        }
+        /* already in the same branch? */
+        if (gitInfo.getCurrentBranchName().equals(branchName)) {
+            System.out.println("No need to checkout the current branch.");
+            System.exit(0);
+        }
+        /* get commit */
+        String commitID = gitInfo.getBranchInfo().get(branchName);
+        Commit branchCommit = getCommitFromSha1(commitID);
+        Commit currentCommit = getCurrentCommit();
+        Set<String> trackedFileNames = currentCommit.getFileNames();
+        /* untracked file */
+        List<String> workingFiles = plainFilenamesIn(CWD);
+        for (String fileName : workingFiles) {
+            if (!trackedFileNames.contains(fileName)) {
+                System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
+                System.exit(0);
+            }
+        }
+        /* delete file that are not in checkout branch */
+        Set<String> branchFileNames = branchCommit.getFileNames();
+        for (String fileName : workingFiles) {
+            if (!branchFileNames.contains(fileName)) {
+                restrictedDelete(join(CWD, fileName));
+            }
+        }
+        /* overwrite/add file in checkout branch */
+        for (String fileName : branchFileNames) {
+            writeFileTOCWD(fileName, branchCommit);
+        }
+        /* clear the staging area */
+        List<String> stagedFilesList = plainFilenamesIn(Repository.STAGING_DIR);
+        for (String stagedFileName : stagedFilesList) {
+            File stagedFile = join(Repository.STAGING_DIR, stagedFileName);
+            restrictedDelete(stagedFile);
+        }
+        /* change status */
+        gitInfo.changeHead(branchCommit);
+        gitInfo.changeCurrentBranch(branchName);
+    }
+
     private static void checkGitletExist() {
         if (!GITLET_DIR.exists()) {
             System.out.println("Not in an initialized Gitlet directory.");
@@ -224,15 +291,29 @@ public class Repository {
         return getCommitFromSha1(HEAD);
     }
 
-    static Commit getCommitFromSha1(String sha1Code) {
+    static Commit getCommitFromSha1(String commitID) {
         List<String> allCommits = plainFilenamesIn(Repository.COMMIT_DIR);
         for (String commitName : allCommits) {
-            if (commitName.equals(sha1Code)) {
+            if (commitName.equals(commitID)) {
                 return readObject(join(Repository.COMMIT_DIR, commitName), Commit.class);
             }
         }
         return null;
     }
 
+    private static void writeFileTOCWD(String fileName, Commit currentCommit){
+        /* get blob name from commit */
+        HashMap<String, String> fileNameToBlob = currentCommit.getFilenameToBlob();
+        if (!fileNameToBlob.containsKey(fileName)) {/* failure case: file does not exist in the commit*/
+            System.out.println("File does not exist in that commit.");
+            System.exit(0);
+        }
+        String fileBlobName = fileNameToBlob.get(fileName);
 
+        /* get the file from the blob */
+        Blob fileBlob = readObject(join(BLOB_DIR, fileBlobName), Blob.class);
+        /* write the file content as needed */
+        File checkoutFile = join(CWD, fileBlob.getFileName());
+        writeContents(checkoutFile, fileBlob.getFileContent());
+    }
 }

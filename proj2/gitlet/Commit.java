@@ -118,4 +118,8 @@ public class Commit implements Serializable {
     public String getMessage() {
         return message;
     }
+
+    public Set<String> getFileNames() {
+        return filenameToBlob.keySet();
+    }
 }
