@@ -7,10 +7,10 @@ import java.util.*;
 
 import static gitlet.Utils.writeObject;
 
-public class RemoveFile implements Serializable {
-    private HashSet<String> rmFileList;
+public class RemovedFile implements Serializable {
+    private List<String> rmFileList;
 
-    public RemoveFile() {
+    public RemovedFile() {
         rmFileList = null;
         saveFile();
     }
@@ -33,7 +33,7 @@ public class RemoveFile implements Serializable {
         rmFileList.remove(fileName);
     }
 
-    public HashSet<String> getFileList() {
+    public List<String> getFileList() {
         return rmFileList;
     }
 }

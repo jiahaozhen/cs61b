@@ -69,8 +69,8 @@ public class Commit implements Serializable {
 
     public void updateFile() {
         Blob stagedFileBlob = null;
-        List<String> fileStaged = plainFilenamesIn(Repository.STAGING_DIR);
-        for (String stagedFileName : fileStaged) {
+        List<String> stagedFilesList = plainFilenamesIn(Repository.STAGING_DIR);
+        for (String stagedFileName : stagedFilesList) {
             /* add the filename to the commit*/
             File stagedFile = join(Repository.STAGING_DIR, stagedFileName);
             stagedFileBlob = readObject(stagedFile, Blob.class);
@@ -80,8 +80,8 @@ public class Commit implements Serializable {
             stagedFileBlob.saveFile(Repository.BLOB_DIR);
         }
         /* delete the file that should be removed*/
-        RemoveFile removedFileList = readObject(Repository.REMOVEDFILE, RemoveFile.class);
-        for (String removedFile : removedFileList.getFileList()) {
+        RemovedFile removedFiles = readObject(Repository.REMOVEDFILE, RemovedFile.class);
+        for (String removedFile : removedFiles.getFileList()) {
             filenameToBlob.remove(removedFile);
         }
     }

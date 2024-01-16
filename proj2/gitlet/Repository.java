@@ -1,8 +1,8 @@
 package gitlet;
 
 import java.io.File;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
+
 import static gitlet.Utils.*;
 
 /** Represents a gitlet repository.
@@ -31,7 +31,7 @@ public class Repository {
     public static final File STAGING_DIR = join(GITLET_DIR, "staging");
     public static final File REMOVEDFILE = join(GITLET_DIR, "removeFileList");
     private static GitInfo gitInfo;
-    private static RemoveFile removedFileList;
+    private static RemovedFile removedFiles;
 
     public static void init() {
         if (GITLET_DIR.exists()) {
@@ -42,7 +42,7 @@ public class Repository {
         COMMIT_DIR.mkdir();
         BLOB_DIR.mkdir();
         STAGING_DIR.mkdir();
-        removedFileList = new RemoveFile();
+        removedFiles = new RemovedFile();
         Commit initCommit = new Commit("initial commit", null, null);
         initCommit.setDate(new Date(0));
         initCommit.saveCommit();
@@ -58,9 +58,9 @@ public class Repository {
             System.exit(0);
         }
         /* remove the filename in removedFileList */
-        removedFileList = readObject(REMOVEDFILE, RemoveFile.class);
-        removedFileList.removeFile(fileName);
-        removedFileList.saveFile();
+        removedFiles = readObject(REMOVEDFILE, RemovedFile.class);
+        removedFiles.removeFile(fileName);
+        removedFiles.saveFile();
         /* stage the file */
         Blob stagingBlob = new Blob(fileName);
         stagingBlob.stageFile();
@@ -120,9 +120,9 @@ public class Repository {
         /* if it's in the current commit */
         if (currentCommit.haveFile(fileName)) {
             /* stage it for removal store the filename in removedFileList*/
-            removedFileList = readObject(REMOVEDFILE, RemoveFile.class);
-            removedFileList.addFile(fileName);
-            removedFileList.saveFile();
+            removedFiles = readObject(REMOVEDFILE, RemovedFile.class);
+            removedFiles.addFile(fileName);
+            removedFiles.saveFile();
             /* delete from working directory */
             restrictedDelete(join(CWD, fileName));
         }
@@ -163,9 +163,53 @@ public class Repository {
 
     public static void status() {
         checkGitletExist();
-        /* print the branch information */
-        System.out.println("===");
+        gitInfo = readObject(GIT_INFO, GitInfo.class);
+        /* print the Branch information */
+        System.out.println("=== Branches ===");
+        List<String> branchNameList = gitInfo.getBranchNames();
+        branchNameList.sort(Comparator.naturalOrder());
+        for (int i = 0; i < branchNameList.size(); i++) {
+            if (i == gitInfo.getCurrentBranchIndex()) {
+                System.out.println("*" + branchNameList.get(i));
+            } else {
+                System.out.println(branchNameList.get(i));
+            }
+        }
+        System.out.println();
+        /* print the Staged Files */
+        System.out.println("=== Staged Files ===");
+        Blob stagedFileBlob;
+        List<String> stagedFilesList = plainFilenamesIn(Repository.STAGING_DIR);
+        if (stagedFilesList != null) {
+            /* sort the filenames*/
+            stagedFilesList.sort(Comparator.naturalOrder());
+            for (String stagedFileName : stagedFilesList) {
+                File stagedFile = join(Repository.STAGING_DIR, stagedFileName);
+                stagedFileBlob = readObject(stagedFile, Blob.class);
+                System.out.println(stagedFileBlob.getFileName());
+            }
+        }
+        System.out.println();
+        /* print the Removed Files */
+        System.out.println("=== Removed Files ===");
+        RemovedFile removedFiles = readObject(Repository.REMOVEDFILE, RemovedFile.class);
+        List<String> removedFileList = removedFiles.getFileList();
+        if (removedFileList != null) {
+            /* sort the filenames*/
+            removedFileList.sort(Comparator.naturalOrder());
+            for (String removedFile : removedFiles.getFileList()) {
+                System.out.println(removedFile);
+            }
+        }
+        System.out.println();
+        /* print the Modifications Not Staged */
+        System.out.println("=== Modifications Not Staged For Commit ===");
 
+        System.out.println();
+        /* print the Untracked Files */
+        System.out.println("=== Untracked Files ===");
+
+        System.out.println();
     }
 
     private static void checkGitletExist() {

@@ -34,7 +34,7 @@ public class Blob implements Serializable {
     }
     public void stageFile() {
         HashMap<String, String> fileNameToSha1 = new HashMap<>();
-        Blob stagedFileBlob = null;
+        Blob stagedFileBlob;
         List<String> fileStaged = plainFilenamesIn(Repository.STAGING_DIR);
         for (String stagedFileName : fileStaged) {
             File stagedFile = join(Repository.STAGING_DIR, stagedFileName);
