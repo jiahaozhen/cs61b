@@ -38,6 +38,9 @@ public class Main {
             case "find":
                 validateArgs(args, 2);
                 Repository.find(args[1]);
+            case "status":
+                validateArgs(args, 1);
+                Repository.status();
             default:
                 System.out.println("No command with that name exists.");
                 System.exit(0);

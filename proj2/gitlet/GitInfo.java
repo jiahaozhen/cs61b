@@ -38,18 +38,6 @@ public class GitInfo implements Serializable {
         this.HEAD = sha1(commit);
     }
 
-    public void addRmFile(String fileName) {
-        rmFileList.add(fileName);
-    }
-
-    public void removaRmFile(String fileName) {
-        rmFileList.remove(fileName);
-    }
-
-    public HashSet<String> getRmFileList() {
-        return rmFileList;
-    }
-
     public String getHEAD() {
         return HEAD;
     }

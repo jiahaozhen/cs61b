@@ -71,16 +71,18 @@ public class Commit implements Serializable {
         Blob stagedFileBlob = null;
         List<String> fileStaged = plainFilenamesIn(Repository.STAGING_DIR);
         for (String stagedFileName : fileStaged) {
+            /* add the filename to the commit*/
             File stagedFile = join(Repository.STAGING_DIR, stagedFileName);
             stagedFileBlob = readObject(stagedFile, Blob.class);
             filenameToBlob.put(stagedFileBlob.getFileName(), stagedFileName);
-            /* move the file in staging dir to blobs*/
+            /* move the file in staging dir to file blobs*/
             restrictedDelete(stagedFile);
             stagedFileBlob.saveFile(Repository.BLOB_DIR);
         }
-        GitInfo gitInfo = readObject(Repository.GIT_INFO, GitInfo.class);
-        for (String rmFileName : gitInfo.getRmFileList()) {
-            filenameToBlob.remove(rmFileName);
+        /* delete the file that should be removed*/
+        RemoveFile removedFileList = readObject(Repository.REMOVEDFILE, RemoveFile.class);
+        for (String removedFile : removedFileList.getFileList()) {
+            filenameToBlob.remove(removedFile);
         }
     }
 

@@ -29,7 +29,9 @@ public class Repository {
     /** The git info file. */
     public static final File GIT_INFO = join(GITLET_DIR, "gitInfo");
     public static final File STAGING_DIR = join(GITLET_DIR, "staging");
+    public static final File REMOVEDFILE = join(GITLET_DIR, "removeFileList");
     private static GitInfo gitInfo;
+    private static RemoveFile removedFileList;
 
     public static void init() {
         if (GITLET_DIR.exists()) {
@@ -40,6 +42,7 @@ public class Repository {
         COMMIT_DIR.mkdir();
         BLOB_DIR.mkdir();
         STAGING_DIR.mkdir();
+        removedFileList = new RemoveFile();
         Commit initCommit = new Commit("initial commit", null, null);
         initCommit.setDate(new Date(0));
         initCommit.saveCommit();
@@ -54,9 +57,11 @@ public class Repository {
             System.out.println("File does not exist.");
             System.exit(0);
         }
-        gitInfo = readObject(GIT_INFO, GitInfo.class);
-        gitInfo.removaRmFile(fileName);
-        gitInfo.saveGitInfo();
+        /* remove the filename in removedFileList */
+        removedFileList = readObject(REMOVEDFILE, RemoveFile.class);
+        removedFileList.removeFile(fileName);
+        removedFileList.saveFile();
+        /* stage the file */
         Blob stagingBlob = new Blob(fileName);
         stagingBlob.stageFile();
     }
@@ -114,10 +119,10 @@ public class Repository {
         }
         /* if it's in the current commit */
         if (currentCommit.haveFile(fileName)) {
-            /* stage it for removal  store the filename in gitInfo*/
-            gitInfo = readObject(GIT_INFO, GitInfo.class);
-            gitInfo.addRmFile(fileName);
-            gitInfo.saveGitInfo();
+            /* stage it for removal store the filename in removedFileList*/
+            removedFileList = readObject(REMOVEDFILE, RemoveFile.class);
+            removedFileList.addFile(fileName);
+            removedFileList.saveFile();
             /* delete from working directory */
             restrictedDelete(join(CWD, fileName));
         }
@@ -154,6 +159,13 @@ public class Repository {
         if (!commitExist) {
             System.out.println("Found no commit with that message.");
         }
+    }
+
+    public static void status() {
+        checkGitletExist();
+        /* print the branch information */
+        System.out.println("===");
+
     }
 
     private static void checkGitletExist() {
