@@ -55,13 +55,12 @@ public class GitInfo implements Serializable {
     }
 
     public boolean haveBranch(String branchName) {
-        if (branchMap.containsKey(branchName)) {
-            return true;
-        } else {
-            return false;
-        }
+        return branchMap.containsKey(branchName);
     }
 
+    public void createNewBranch(String branchName, Commit commit) {
+        branchMap.put(branchName, commit.generateID());
+    }
     public void changeCurrentBranch(String BranchName) {
         currentBranchName = BranchName;
     }

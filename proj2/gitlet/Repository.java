@@ -276,6 +276,19 @@ public class Repository {
         gitInfo.changeCurrentBranch(branchName);
     }
 
+    public static void branch(String branchName) {
+        checkGitletExist();
+        /* failure case: branch already exist */
+        gitInfo = readObject(GIT_INFO, GitInfo.class);
+        if (!gitInfo.haveBranch(branchName)) {
+            System.out.println("A branch with that name already exists.");
+            System.exit(0);
+        }
+        /* create the new branch */
+        gitInfo.createNewBranch(branchName, getCurrentCommit());
+        gitInfo.saveGitInfo();
+    }
+
     private static void checkGitletExist() {
         if (!GITLET_DIR.exists()) {
             System.out.println("Not in an initialized Gitlet directory.");

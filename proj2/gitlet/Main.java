@@ -60,6 +60,10 @@ public class Main {
                     validateArgs(args, 2);
                 }
                 break;
+            case "branch":
+                validateArgs(args, 2);
+                Repository.branch(args[1]);
+                break;
             default:
                 System.out.println("No command with that name exists.");
                 System.exit(0);
