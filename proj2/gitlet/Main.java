@@ -26,21 +26,27 @@ public class Main {
             case "commit":
                 validateArgs(args, 2);
                 Repository.commit(args[1]);
+                break;
             case "rm":
                 validateArgs(args, 2);
                 Repository.rm(args[1]);
+                break;
             case "log":
                 validateArgs(args, 1);
                 Repository.log();
+                break;
             case "global-log":
                 validateArgs(args, 1);
                 Repository.globalLog();
+                break;
             case "find":
                 validateArgs(args, 2);
                 Repository.find(args[1]);
+                break;
             case "status":
                 validateArgs(args, 1);
                 Repository.status();
+                break;
             case "checkout":
                 if (args.length == 2) {
                     Repository.checkoutBranch(args[1]);
@@ -53,6 +59,7 @@ public class Main {
                 } else {
                     validateArgs(args, 2);
                 }
+                break;
             default:
                 System.out.println("No command with that name exists.");
                 System.exit(0);

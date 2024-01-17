@@ -11,7 +11,7 @@ public class RemovedFile implements Serializable {
     private List<String> rmFileList;
 
     public RemovedFile() {
-        rmFileList = null;
+        rmFileList = new ArrayList<>();
         saveFile();
     }
 

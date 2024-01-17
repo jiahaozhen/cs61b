@@ -1,7 +1,5 @@
 package gitlet;
 
-import org.checkerframework.checker.units.qual.C;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
@@ -15,7 +13,7 @@ public class GitInfo implements Serializable {
     private String currentBranchName;
 
     public GitInfo(String branchName, Commit initCommit) {
-        HEAD = sha1(initCommit);
+        HEAD = initCommit.generateID();
         branchMap = new HashMap<>(2);
         branchMap.put(branchName, HEAD);
         currentBranchName = branchName;
@@ -32,7 +30,7 @@ public class GitInfo implements Serializable {
     }
 
     public void changeHead(Commit commit) {
-        this.HEAD = sha1(commit);
+        this.HEAD = commit.generateID();
     }
 
     public void changeStatus(Commit commit) {

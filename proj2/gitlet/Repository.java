@@ -28,21 +28,26 @@ public class Repository {
     public static final File BLOB_DIR = join(GITLET_DIR, "blobs");
     /** The git info file. */
     public static final File GIT_INFO = join(GITLET_DIR, "gitInfo");
+    /** The staging area(directory) **/
     public static final File STAGING_DIR = join(GITLET_DIR, "staging");
-    public static final File REMOVEDFILE = join(GITLET_DIR, "removeFileList");
+    /** The removed files  **/
+    public static final File REMOVEDFILE = join(GITLET_DIR, "removedFiles");
     private static GitInfo gitInfo;
     private static RemovedFile removedFiles;
 
     public static void init() {
+        /* failure case */
         if (GITLET_DIR.exists()) {
             System.out.println("A Gitlet version-control system already exists in the current directory.");
-            return;
+            System.exit(0);
         }
+        /* make directory */
         GITLET_DIR.mkdir();
         COMMIT_DIR.mkdir();
         BLOB_DIR.mkdir();
         STAGING_DIR.mkdir();
         removedFiles = new RemovedFile();
+        /* create the initial commit */
         Commit initCommit = new Commit("initial commit", null, null);
         initCommit.setDate(new Date(0));
         initCommit.saveCommit();

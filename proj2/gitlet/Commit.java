@@ -25,15 +25,19 @@ public class Commit implements Serializable {
     /** The message of this Commit. */
     private String message;
     private Date timestamp;
-    private String parent1;
-    private String parent2;
+    private ArrayList<String> parents;
     private HashMap<String, String> filenameToBlob;
 
     public Commit(String message, Commit parent1, Commit parent2) {
         this.message = message;
         timestamp = new Date();
-        this.parent1 = sha1(parent1);
-        this.parent2 = sha1(parent2);
+        parents = new ArrayList<>(2);
+        if (parent1 != null) {
+            parents.set(0, parent1.generateID());
+        }
+        if (parent2 != null) {
+            parents.set(1, parent2.generateID());
+        }
         filenameToBlob = new HashMap<>();
     }
 
@@ -42,7 +46,7 @@ public class Commit implements Serializable {
     }
 
     public void saveCommit() {
-        File commitFile = join(Repository.COMMIT_DIR, sha1(this));
+        File commitFile = join(Repository.COMMIT_DIR, this.generateID());
         try {
             commitFile.createNewFile();
         } catch (IOException e) {
@@ -88,8 +92,8 @@ public class Commit implements Serializable {
 
     public void printLog() {
         printCommit();
-        if (!this.parent1.equals(sha1((Object) null))) {
-            Commit parent = Repository.getCommitFromSha1(parent1);
+        if (parents.get(0) != null) {
+            Commit parent = Repository.getCommitFromSha1(parents.get(0));
             parent.printCommit();
         }
     }
@@ -98,11 +102,11 @@ public class Commit implements Serializable {
         /* print the prompt */
         System.out.println("===");
         /* commit id */
-        String id = sha1(this);
+        String id = this.generateID();
         System.out.println("commit " + id);
         /* merge information */
-        if (!this.parent2.equals(sha1((Object) null))) {
-            System.out.println("Merge: " + parent1.substring(0, 7) + " " + parent2.substring(0, 7));
+        if (parents.get(1) != null) {
+            System.out.println("Merge: " + parents.get(0).substring(0, 7) + " " + parents.get(1).substring(0, 7));
         }
         /* the date */
         DateFormat dateFormat = new SimpleDateFormat("EEE MMM d HH:mm:ss yyyy Z", Locale.CHINA);
@@ -121,5 +125,9 @@ public class Commit implements Serializable {
 
     public Set<String> getFileNames() {
         return filenameToBlob.keySet();
+    }
+
+    public String generateID() {
+        return sha1(this.message, this.timestamp.toString(), this.parents.toString(), this.filenameToBlob.toString());
     }
 }

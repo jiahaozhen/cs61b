@@ -24,7 +24,7 @@ public class Blob implements Serializable {
         return fileContent;
     }
     public void saveFile(File DIR) {
-        File blobFile = join(DIR, sha1(this));
+        File blobFile = join(DIR, sha1(this.fileName, this.fileContent));
         try {
             blobFile.createNewFile();
         } catch (IOException e) {
@@ -48,7 +48,7 @@ public class Blob implements Serializable {
         }
         /* check if the file is the same in the current commit */
         Commit currentCommit = Repository.getCurrentCommit();
-        if (currentCommit.haveSameFile(sha1(this))) {
+        if (currentCommit.haveSameFile(sha1(this.fileName, this.fileContent))) {
             return;/* don't do anything if true*/
         }
         /* create the new one in the staging directory */
