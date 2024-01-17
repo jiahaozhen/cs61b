@@ -90,7 +90,7 @@ public class Repository {
         newCommit.saveCommit();
         /* change the git info */
         gitInfo = readObject(GIT_INFO, GitInfo.class);
-        gitInfo.changeStatus(newCommit);
+        gitInfo.addCommit(newCommit);
         gitInfo.saveGitInfo();
     }
 
@@ -212,7 +212,7 @@ public class Repository {
     public static void checkoutFile(String ID, String fileName) {
         checkGitletExist();
         /* get commit */
-        Commit currentCommit = getCommitFromSha1(ID);
+        Commit currentCommit = getCommitFromID(ID);
         if (currentCommit == null) {
             System.out.println("No commit with that id exists.");
             System.exit(0);
@@ -230,50 +230,24 @@ public class Repository {
 
     public static void checkoutBranch(String branchName) {
         checkGitletExist();
-        /* branch name exist? */
+        /* failure case: branch name does not exist */
         gitInfo = readObject(GIT_INFO, GitInfo.class);
         if (!gitInfo.haveBranch(branchName)) {
             System.out.println("No such branch exists.");
             System.exit(0);
         }
-        /* already in the same branch? */
+        /* failure case: already in the same branch */
         if (gitInfo.getCurrentBranchName().equals(branchName)) {
             System.out.println("No need to checkout the current branch.");
             System.exit(0);
         }
-        /* get commit */
-        String commitID = gitInfo.getBranchInfo().get(branchName);
-        Commit branchCommit = getCommitFromSha1(commitID);
-        Commit currentCommit = getCurrentCommit();
-        Set<String> trackedFileNames = currentCommit.getFileNames();
-        /* untracked file */
-        List<String> workingFiles = plainFilenamesIn(CWD);
-        for (String fileName : workingFiles) {
-            if (!trackedFileNames.contains(fileName)) {
-                System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
-                System.exit(0);
-            }
-        }
-        /* delete file that are not in checkout branch */
-        Set<String> branchFileNames = branchCommit.getFileNames();
-        for (String fileName : workingFiles) {
-            if (!branchFileNames.contains(fileName)) {
-                restrictedDelete(join(CWD, fileName));
-            }
-        }
-        /* overwrite/add file in checkout branch */
-        for (String fileName : branchFileNames) {
-            writeFileToCWD(fileName, branchCommit);
-        }
-        /* clear the staging area */
-        List<String> stagedFilesList = plainFilenamesIn(Repository.STAGING_DIR);
-        for (String stagedFileName : stagedFilesList) {
-            File stagedFile = join(Repository.STAGING_DIR, stagedFileName);
-            stagedFile.delete();
-        }
+        /* change to the commit */
+        Commit branchCommit = gitInfo.getHEADOfBranch(branchName);
+        changeToCommit(branchCommit);
         /* change status */
         gitInfo.changeHead(branchCommit);
-        gitInfo.changeCurrentBranch(branchName);
+        gitInfo.changeBranch(branchName);
+        gitInfo.saveGitInfo();
     }
 
     public static void branch(String branchName) {
@@ -307,6 +281,22 @@ public class Repository {
         gitInfo.saveGitInfo();
     }
 
+    public static void reset(String commitID) {
+        checkGitletExist();
+        Commit targetCommit = getCommitFromID(commitID);
+        /* failure case: no such commit */
+        if (targetCommit == null) {
+            System.out.println("No commit with that id exists.");
+            System.exit(0);
+        }
+        /* change to the commit */
+        changeToCommit(targetCommit);
+        /* change the git info */
+        gitInfo = readObject(GIT_INFO, GitInfo.class);
+        gitInfo.changeHead(targetCommit);
+        gitInfo.saveGitInfo();
+    }
+
     private static void checkGitletExist() {
         if (!GITLET_DIR.exists()) {
             System.out.println("Not in an initialized Gitlet directory.");
@@ -317,17 +307,34 @@ public class Repository {
     static Commit getCurrentCommit() {
         GitInfo presentInfo = readObject(GIT_INFO, GitInfo.class);
         String HEAD = presentInfo.getHEAD();
-        return getCommitFromSha1(HEAD);
+        return getCommitFromID(HEAD);
     }
 
-    static Commit getCommitFromSha1(String commitID) {
+    static Commit getCommitFromID(String commitID) {
+        if (commitID.length() == 40) {
+            File commitFile = join(COMMIT_DIR, commitID);
+            if (commitFile.exists()) {
+                return readObject(commitFile, Commit.class);
+            } else {
+                return null;
+            }
+        }
         List<String> allCommits = plainFilenamesIn(Repository.COMMIT_DIR);
-        for (String commitName : allCommits) {
-            if (commitName.equals(commitID)) {
-                return readObject(join(Repository.COMMIT_DIR, commitName), Commit.class);
+        if (allCommits != null) {
+            for (String commitName : allCommits) {
+                if (sameCommitID(commitID, commitName)) {
+                    return readObject(join(Repository.COMMIT_DIR, commitName), Commit.class);
+                }
             }
         }
         return null;
+    }
+
+    private static boolean sameCommitID(String src, String target) {
+        if (src.length() >= 6 && src.length() <= 40) {
+            return target.startsWith(src);
+        }
+        return false;
     }
 
     private static void writeFileToCWD(String fileName, Commit currentCommit){
@@ -338,7 +345,6 @@ public class Repository {
             System.exit(0);
         }
         String fileBlobName = fileNameToBlob.get(fileName);
-
         /* get the file from the blob */
         Blob fileBlob = readObject(join(BLOB_DIR, fileBlobName), Blob.class);
         /* write the file content as needed */
@@ -350,5 +356,53 @@ public class Repository {
         removedFiles = readObject(REMOVEDFILE, RemovedFile.class);
         removedFiles.removeFile(fileName);
         removedFiles.saveFile();
+    }
+
+    private static void untrackedFileCheck(Commit newCommit) {
+        Commit currentCommit = getCurrentCommit();
+        Set<String> trackedFileNames = currentCommit.getFileNames();
+        Set<String> newFileNames = newCommit.getFileNames();
+        List<String> workingFiles = plainFilenamesIn(CWD);
+        if (workingFiles != null) {
+            for (String fileName : workingFiles) {
+                /* a working file is untracked in the current branch and would be overwritten by the reset */
+                if (!trackedFileNames.contains(fileName) && newFileNames.contains(fileName)) {
+                    System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
+                    System.exit(0);
+                }
+            }
+        }
+    }
+
+    private static void clearStagingArea() {
+        List<String> stagedFileList = plainFilenamesIn(Repository.STAGING_DIR);
+        if (stagedFileList != null) {
+            for (String stagedFileName : stagedFileList) {
+                File stagedFile = join(Repository.STAGING_DIR, stagedFileName);
+                stagedFile.delete();
+            }
+        }
+        removedFiles = readObject(REMOVEDFILE, RemovedFile.class);
+        removedFiles.clear();
+        removedFiles.saveFile();
+    }
+
+    private static void changeToCommit(Commit targetCommit) {
+        /* failure case: untracked file would be overwritten */
+        untrackedFileCheck(targetCommit);
+        /* delete file that are not in target commit */
+        List<String> workingFiles = plainFilenamesIn(CWD);
+        Set<String> branchFileNames = targetCommit.getFileNames();
+        for (String fileName : workingFiles) {
+            if (!branchFileNames.contains(fileName)) {
+                restrictedDelete(join(CWD, fileName));
+            }
+        }
+        /* overwrite/add file in checkout branch */
+        for (String fileName : branchFileNames) {
+            writeFileToCWD(fileName, targetCommit);
+        }
+        /* clear the staging area */
+        clearStagingArea();
     }
 }

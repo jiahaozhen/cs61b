@@ -94,7 +94,7 @@ public class Commit implements Serializable {
     public void printLog() {
         printCommit();
         if (parents.get(0) != null) {
-            Commit parent = Repository.getCommitFromSha1(parents.get(0));
+            Commit parent = Repository.getCommitFromID(parents.get(0));
             parent.printLog();
         }
     }

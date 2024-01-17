@@ -36,4 +36,8 @@ public class RemovedFile implements Serializable {
     public List<String> getFileList() {
         return rmFileList;
     }
+
+    public void clear() {
+        rmFileList = new ArrayList<>();
+    }
 }

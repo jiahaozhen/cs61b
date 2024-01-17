@@ -67,6 +67,9 @@ public class Main {
             case "rm-branch":
                 validateArgs(args, 2);
                 Repository.removeBranch(args[1]);
+            case "reset":
+                validateArgs(args, 2);
+                Repository.reset(args[1]);
             default:
                 System.out.println("No command with that name exists.");
                 System.exit(0);

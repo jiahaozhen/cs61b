@@ -8,15 +8,14 @@ import java.util.*;
 import static gitlet.Utils.*;
 
 public class GitInfo implements Serializable {
-    private Map<String, String> branchMap;
+    private final Map<String, String> branchMap;
     private String HEAD;
     private String currentBranchName;
-
     public GitInfo(String branchName, Commit initCommit) {
         HEAD = initCommit.generateID();
-        branchMap = new HashMap<>(2);
+        branchMap = new HashMap<>();
         branchMap.put(branchName, HEAD);
-        currentBranchName = branchName;
+        currentBranchName = HEAD;
     }
 
     public void saveGitInfo() {
@@ -33,17 +32,14 @@ public class GitInfo implements Serializable {
         this.HEAD = commit.generateID();
     }
 
-    public void changeStatus(Commit commit) {
-        changeHead(commit);
-        branchMap.put(currentBranchName, HEAD);
+    public void addCommit(Commit commit) {
+        String commitID = commit.generateID();
+        HEAD = commitID;
+        branchMap.put(getCurrentBranchName(), commitID);
     }
 
     public String getHEAD() {
         return HEAD;
-    }
-
-    public Map<String, String> getBranchInfo() {
-        return branchMap;
     }
 
     public List<String> getBranchNames() {
@@ -66,7 +62,12 @@ public class GitInfo implements Serializable {
         branchMap.remove(branchName);
     }
 
-    public void changeCurrentBranch(String BranchName) {
-        currentBranchName = BranchName;
+    public Commit getHEADOfBranch(String branchName) {
+        String commitID = branchMap.get(branchName);
+        return Repository.getCommitFromID(commitID);
+    }
+
+    public void changeBranch(String branchName) {
+        currentBranchName = branchName;
     }
 }
