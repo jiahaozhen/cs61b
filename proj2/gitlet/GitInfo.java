@@ -61,6 +61,11 @@ public class GitInfo implements Serializable {
     public void createNewBranch(String branchName, Commit commit) {
         branchMap.put(branchName, commit.generateID());
     }
+
+    public void removeBranch(String branchName) {
+        branchMap.remove(branchName);
+    }
+
     public void changeCurrentBranch(String BranchName) {
         currentBranchName = BranchName;
     }

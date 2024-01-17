@@ -280,12 +280,30 @@ public class Repository {
         checkGitletExist();
         /* failure case: branch already exist */
         gitInfo = readObject(GIT_INFO, GitInfo.class);
-        if (!gitInfo.haveBranch(branchName)) {
+        if (gitInfo.haveBranch(branchName)) {
             System.out.println("A branch with that name already exists.");
             System.exit(0);
         }
         /* create the new branch */
         gitInfo.createNewBranch(branchName, getCurrentCommit());
+        gitInfo.saveGitInfo();
+    }
+
+    public static void removeBranch(String branchName) {
+        checkGitletExist();
+        /* failure case: branch already exist */
+        gitInfo = readObject(GIT_INFO, GitInfo.class);
+        if (!gitInfo.haveBranch(branchName)) {
+            System.out.println("A branch with that name does not exist.");
+            System.exit(0);
+        }
+        /* failure case: try to remove the current branch */
+        if (gitInfo.getCurrentBranchName().equals(branchName)) {
+            System.out.println("Cannot remove the current branch.");
+            System.exit(0);
+        }
+        /* delete the branch */
+        gitInfo.removeBranch(branchName);
         gitInfo.saveGitInfo();
     }
 
