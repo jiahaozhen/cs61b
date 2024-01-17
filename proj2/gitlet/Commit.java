@@ -26,17 +26,21 @@ public class Commit implements Serializable {
     private String message;
     private Date timestamp;
     private ArrayList<String> parents;
-    private HashMap<String, String> filenameToBlob;
+    private Map<String, String> filenameToBlob;
 
     public Commit(String message, Commit parent1, Commit parent2) {
         this.message = message;
         timestamp = new Date();
         parents = new ArrayList<>(2);
         if (parent1 != null) {
-            parents.set(0, parent1.generateID());
+            parents.add(0, parent1.generateID());
+        } else {
+            parents.add(0, null);
         }
         if (parent2 != null) {
             parents.set(1, parent2.generateID());
+        } else {
+            parents.add(1, null);
         }
         filenameToBlob = new HashMap<>();
     }
@@ -55,32 +59,29 @@ public class Commit implements Serializable {
         writeObject(commitFile, this);
     }
 
-    public boolean haveSameFile(String blobSha1) {
-        if (filenameToBlob.containsValue(blobSha1)) {
-            return true;
-        } else {
-            return false;
-        }
+    boolean haveSameBlob(String blobSha1) {
+        return filenameToBlob.containsValue(blobSha1);
     }
 
-    public void setFilenameToBlob(HashMap<String, String> FilenameToBlob) {
+    public void setFilenameToBlob(Map<String, String> FilenameToBlob) {
         this.filenameToBlob = FilenameToBlob;
     }
 
-    public HashMap<String, String> getFilenameToBlob() {
+    public Map<String, String> getFilenameToBlob() {
         return filenameToBlob;
     }
 
     public void updateFile() {
-        Blob stagedFileBlob = null;
+        Blob stagedFileBlob;
+        /* have the file in the staging area */
         List<String> stagedFilesList = plainFilenamesIn(Repository.STAGING_DIR);
         for (String stagedFileName : stagedFilesList) {
-            /* add the filename to the commit*/
+            /* add the filename to the commit */
             File stagedFile = join(Repository.STAGING_DIR, stagedFileName);
             stagedFileBlob = readObject(stagedFile, Blob.class);
             filenameToBlob.put(stagedFileBlob.getFileName(), stagedFileName);
             /* move the file in staging dir to file blobs*/
-            restrictedDelete(stagedFile);
+            stagedFile.delete();
             stagedFileBlob.saveFile(Repository.BLOB_DIR);
         }
         /* delete the file that should be removed*/
@@ -94,7 +95,7 @@ public class Commit implements Serializable {
         printCommit();
         if (parents.get(0) != null) {
             Commit parent = Repository.getCommitFromSha1(parents.get(0));
-            parent.printCommit();
+            parent.printLog();
         }
     }
 
@@ -108,11 +109,12 @@ public class Commit implements Serializable {
         if (parents.get(1) != null) {
             System.out.println("Merge: " + parents.get(0).substring(0, 7) + " " + parents.get(1).substring(0, 7));
         }
-        /* the date */
-        DateFormat dateFormat = new SimpleDateFormat("EEE MMM d HH:mm:ss yyyy Z", Locale.CHINA);
-        System.out.println(dateFormat.format(timestamp));
+        /* the date (copy it from GitHub) */
+        DateFormat dateFormat = new SimpleDateFormat("EEE MMM d HH:mm:ss yyyy Z", Locale.ENGLISH);
+        System.out.println("Date: " + dateFormat.format(timestamp));
         /* commit message */
         System.out.println(this.message);
+        System.out.println();
     }
 
     public boolean haveFile(String fileName) {

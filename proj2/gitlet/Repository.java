@@ -58,14 +58,13 @@ public class Repository {
     public static void add(String fileName) {
         checkGitletExist();
         File addFile = join(CWD, fileName);
+        /* failure case : file does not exist */
         if (!addFile.exists()) {
             System.out.println("File does not exist.");
             System.exit(0);
         }
-        /* remove the filename in removedFileList */
-        removedFiles = readObject(REMOVEDFILE, RemovedFile.class);
-        removedFiles.removeFile(fileName);
-        removedFiles.saveFile();
+        /* remove the file in removedFileList */
+        removeFileInRemovedFiles(fileName);
         /* stage the file */
         Blob stagingBlob = new Blob(fileName);
         stagingBlob.stageFile();
@@ -73,12 +72,12 @@ public class Repository {
 
     public static void commit(String message) {
         checkGitletExist();
-        /* message should not be empty*/
+        /* failure case: message should not be empty */
         if (message.isBlank()) {
             System.out.println("Please enter a commit message.");
             System.exit(0);
         }
-        /* no file to commit */
+        /* failure case: no file to commit */
         if (plainFilenamesIn(STAGING_DIR) == null) {
             System.out.println("No changes added to the commit.");
             System.exit(0);
@@ -86,45 +85,39 @@ public class Repository {
         /* default setting */
         Commit newCommit = new Commit(message, getCurrentCommit(), null);
         newCommit.setFilenameToBlob(getCurrentCommit().getFilenameToBlob());
-        /* commit the staged file*/
+        /* commit the staged file */
         newCommit.updateFile();
         newCommit.saveCommit();
-        /* change the HEAD */
+        /* change the git info */
         gitInfo = readObject(GIT_INFO, GitInfo.class);
         gitInfo.changeStatus(newCommit);
         gitInfo.saveGitInfo();
     }
 
-    /** Unstage the file if it is currently staged for addition.
-     * If the file is tracked in the current commit, stage it for removal
-     * and remove the file from the working directory
-     * if the user has not already done so
-     * (do not remove it unless it is tracked in the current commit).
-     * */
     public static void rm(String fileName) {
         checkGitletExist();
-        /* if it's staged */
+        /* if file is staged */
         Blob stagedFileBlob;
         boolean alreadyStaged = false;
-        List<String> fileStaged = plainFilenamesIn(Repository.STAGING_DIR);
-        for (String stagedFileName : fileStaged) {
+        List<String> stagedFiles = plainFilenamesIn(Repository.STAGING_DIR);
+        for (String stagedFileName : stagedFiles) {
             File stagedFile = join(Repository.STAGING_DIR, stagedFileName);
             stagedFileBlob = readObject(stagedFile, Blob.class);
             if (stagedFileBlob.getFileName().equals(fileName)) {
-                restrictedDelete(stagedFile);
+                stagedFile.delete();
                 alreadyStaged = true;
                 break;
             }
         }
         Commit currentCommit = getCurrentCommit();
-        /* failure cases */
+        /* failure case */
         if (!alreadyStaged && !currentCommit.haveFile(fileName)) {
             System.out.println("No reason to remove the file.");
             System.exit(0);
         }
-        /* if it's in the current commit */
+        /* if the file is in the current commit */
         if (currentCommit.haveFile(fileName)) {
-            /* stage it for removal store the filename in removedFileList*/
+            /* stage it for removal store the filename in removedFiles*/
             removedFiles = readObject(REMOVEDFILE, RemovedFile.class);
             removedFiles.addFile(fileName);
             removedFiles.saveFile();
@@ -224,7 +217,7 @@ public class Repository {
             System.out.println("No commit with that id exists.");
             System.exit(0);
         }
-        writeFileTOCWD(fileName, currentCommit);
+        writeFileToCWD(fileName, currentCommit);
     }
 
     public static void checkoutFile(String fileName) {
@@ -232,7 +225,7 @@ public class Repository {
         /* get the HEAD commit */
         gitInfo = readObject(GIT_INFO, GitInfo.class);
         Commit currentCommit = getCurrentCommit();
-        writeFileTOCWD(fileName, currentCommit);
+        writeFileToCWD(fileName, currentCommit);
     }
 
     public static void checkoutBranch(String branchName) {
@@ -270,13 +263,13 @@ public class Repository {
         }
         /* overwrite/add file in checkout branch */
         for (String fileName : branchFileNames) {
-            writeFileTOCWD(fileName, branchCommit);
+            writeFileToCWD(fileName, branchCommit);
         }
         /* clear the staging area */
         List<String> stagedFilesList = plainFilenamesIn(Repository.STAGING_DIR);
         for (String stagedFileName : stagedFilesList) {
             File stagedFile = join(Repository.STAGING_DIR, stagedFileName);
-            restrictedDelete(stagedFile);
+            stagedFile.delete();
         }
         /* change status */
         gitInfo.changeHead(branchCommit);
@@ -290,7 +283,7 @@ public class Repository {
         }
     }
 
-    public static Commit getCurrentCommit() {
+    static Commit getCurrentCommit() {
         GitInfo presentInfo = readObject(GIT_INFO, GitInfo.class);
         String HEAD = presentInfo.getHEAD();
         return getCommitFromSha1(HEAD);
@@ -306,9 +299,9 @@ public class Repository {
         return null;
     }
 
-    private static void writeFileTOCWD(String fileName, Commit currentCommit){
+    private static void writeFileToCWD(String fileName, Commit currentCommit){
         /* get blob name from commit */
-        HashMap<String, String> fileNameToBlob = currentCommit.getFilenameToBlob();
+        Map<String, String> fileNameToBlob = currentCommit.getFilenameToBlob();
         if (!fileNameToBlob.containsKey(fileName)) {/* failure case: file does not exist in the commit*/
             System.out.println("File does not exist in that commit.");
             System.exit(0);
@@ -320,5 +313,11 @@ public class Repository {
         /* write the file content as needed */
         File checkoutFile = join(CWD, fileBlob.getFileName());
         writeContents(checkoutFile, fileBlob.getFileContent());
+    }
+
+    private static void removeFileInRemovedFiles(String fileName) {
+        removedFiles = readObject(REMOVEDFILE, RemovedFile.class);
+        removedFiles.removeFile(fileName);
+        removedFiles.saveFile();
     }
 }

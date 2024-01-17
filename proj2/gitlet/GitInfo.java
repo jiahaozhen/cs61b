@@ -8,7 +8,7 @@ import java.util.*;
 import static gitlet.Utils.*;
 
 public class GitInfo implements Serializable {
-    private HashMap<String, String> branchMap;
+    private Map<String, String> branchMap;
     private String HEAD;
     private String currentBranchName;
 
@@ -42,7 +42,7 @@ public class GitInfo implements Serializable {
         return HEAD;
     }
 
-    public HashMap<String, String> getBranchInfo() {
+    public Map<String, String> getBranchInfo() {
         return branchMap;
     }
 

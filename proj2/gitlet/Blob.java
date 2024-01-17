@@ -8,8 +8,8 @@ import java.util.*;
 import static gitlet.Utils.*;
 
 public class Blob implements Serializable {
-    private String fileName;
-    private String fileContent;
+    private final String fileName;
+    private final String fileContent;
 
     public Blob(String fileName) {
         this.fileName = fileName;
@@ -20,11 +20,13 @@ public class Blob implements Serializable {
     public String getFileName() {
         return fileName;
     }
+
     public String getFileContent() {
         return fileContent;
     }
+
     public void saveFile(File DIR) {
-        File blobFile = join(DIR, sha1(this.fileName, this.fileContent));
+        File blobFile = join(DIR, generateID());
         try {
             blobFile.createNewFile();
         } catch (IOException e) {
@@ -33,25 +35,32 @@ public class Blob implements Serializable {
         writeObject(blobFile, this);
     }
     public void stageFile() {
-        HashMap<String, String> fileNameToSha1 = new HashMap<>();
-        Blob stagedFileBlob;
+        Map<String, String> fileNameToSha1 = new HashMap<>();
+        Blob stagedBlob;
+        /* generate a map from the staged file's true name to its blob name */
         List<String> fileStaged = plainFilenamesIn(Repository.STAGING_DIR);
-        for (String stagedFileName : fileStaged) {
-            File stagedFile = join(Repository.STAGING_DIR, stagedFileName);
-            stagedFileBlob = readObject(stagedFile, Blob.class);
-            fileNameToSha1.put(stagedFileBlob.getFileName(), stagedFileName);
+        if (fileStaged != null) {
+            for (String stagedFileName : fileStaged) {
+                File stagedFile = join(Repository.STAGING_DIR, stagedFileName);
+                stagedBlob = readObject(stagedFile, Blob.class);
+                fileNameToSha1.put(stagedBlob.getFileName(), stagedFileName);
+            }
         }
-        /* now we have a hashmap from the staged file true name to its blob name */
         if (fileNameToSha1.containsKey(fileName)) { /* if we have the file of the same name */
             /* delete the old one */
-            restrictedDelete(join(Repository.STAGING_DIR, fileNameToSha1.get(fileName)));
+            File oldBlob = join(Repository.STAGING_DIR, fileNameToSha1.get(fileName));
+            oldBlob.delete();
         }
         /* check if the file is the same in the current commit */
         Commit currentCommit = Repository.getCurrentCommit();
-        if (currentCommit.haveSameFile(sha1(this.fileName, this.fileContent))) {
-            return;/* don't do anything if true*/
+        if (currentCommit.haveSameBlob(generateID())) {
+            return; /* don't do anything if true */
         }
         /* create the new one in the staging directory */
         saveFile(Repository.STAGING_DIR);
+    }
+
+    private String generateID() {
+        return sha1(fileName, fileContent);
     }
 }
