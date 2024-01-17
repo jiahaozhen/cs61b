@@ -293,7 +293,7 @@ public class Repository {
         changeToCommit(targetCommit);
         /* change the git info */
         gitInfo = readObject(GIT_INFO, GitInfo.class);
-        gitInfo.changeHead(targetCommit);
+        gitInfo.reset(targetCommit);
         gitInfo.saveGitInfo();
     }
 

@@ -70,4 +70,9 @@ public class GitInfo implements Serializable {
     public void changeBranch(String branchName) {
         currentBranchName = branchName;
     }
+
+    public void reset(Commit target) {
+        HEAD = target.generateID();
+        branchMap.put(currentBranchName, HEAD);
+    }
 }
