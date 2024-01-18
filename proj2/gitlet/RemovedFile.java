@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.*;
 
+import static gitlet.Utils.readObject;
 import static gitlet.Utils.writeObject;
 
 public class RemovedFile implements Serializable {
@@ -39,5 +40,14 @@ public class RemovedFile implements Serializable {
 
     public void clear() {
         rmFileList = new ArrayList<>();
+    }
+
+    public boolean isEmpty() {
+        return this.rmFileList.isEmpty();
+    }
+
+    public static boolean haveStagedRemovedFiles() {
+        RemovedFile removedFile = readObject(Repository.REMOVEDFILE, RemovedFile.class);
+        return !removedFile.isEmpty();
     }
 }

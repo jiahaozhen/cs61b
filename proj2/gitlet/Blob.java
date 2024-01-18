@@ -34,6 +34,7 @@ public class Blob implements Serializable {
         }
         writeObject(blobFile, this);
     }
+
     public void stageFile() {
         Map<String, String> fileNameToSha1 = new HashMap<>();
         Blob stagedBlob;
@@ -62,5 +63,11 @@ public class Blob implements Serializable {
 
     private String generateID() {
         return sha1(fileName, fileContent);
+    }
+
+    public static boolean haveStagedAddFiles() {
+        List<String> fileStaged = plainFilenamesIn(Repository.STAGING_DIR);
+        assert fileStaged != null;
+        return !fileStaged.isEmpty();
     }
 }

@@ -23,9 +23,9 @@ public class Commit implements Serializable {
      */
 
     /** The message of this Commit. */
-    private String message;
+    private final String message;
     private Date timestamp;
-    private ArrayList<String> parents;
+    private final ArrayList<String> parents;
     private Map<String, String> filenameToBlob;
 
     public Commit(String message, Commit parent1, Commit parent2) {
@@ -75,6 +75,7 @@ public class Commit implements Serializable {
         Blob stagedFileBlob;
         /* have the file in the staging area */
         List<String> stagedFilesList = plainFilenamesIn(Repository.STAGING_DIR);
+        assert stagedFilesList != null;
         for (String stagedFileName : stagedFilesList) {
             /* add the filename to the commit */
             File stagedFile = join(Repository.STAGING_DIR, stagedFileName);
@@ -84,22 +85,25 @@ public class Commit implements Serializable {
             stagedFile.delete();
             stagedFileBlob.saveFile(Repository.BLOB_DIR);
         }
-        /* delete the file that should be removed*/
+        /* delete the file that should be removed */
         RemovedFile removedFiles = readObject(Repository.REMOVEDFILE, RemovedFile.class);
         for (String removedFile : removedFiles.getFileList()) {
             filenameToBlob.remove(removedFile);
         }
+        removedFiles.clear();
+        removedFiles.saveFile();
     }
 
     public void printLog() {
         printCommit();
         if (parents.get(0) != null) {
             Commit parent = Repository.getCommitFromID(parents.get(0));
+            assert  parent != null;
             parent.printLog();
         }
     }
 
-    void printCommit() {
+    public void printCommit() {
         /* print the prompt */
         System.out.println("===");
         /* commit id */
@@ -121,6 +125,10 @@ public class Commit implements Serializable {
         return filenameToBlob.containsKey(fileName);
     }
 
+    public boolean haveBlob(String BlobID) {
+        return filenameToBlob.containsValue(BlobID);
+    }
+
     public String getMessage() {
         return message;
     }
@@ -131,5 +139,22 @@ public class Commit implements Serializable {
 
     public String generateID() {
         return sha1(this.message, this.timestamp.toString(), this.parents.toString(), this.filenameToBlob.toString());
+    }
+
+    public Commit getParentCommit() {
+        String parentCommitID = parents.get(0);
+        if (parentCommitID != null) {
+            return Repository.getCommitFromID(parentCommitID);
+        } else {
+            return null;
+        }
+    }
+
+    public boolean haveParent() {
+        return parents.get(0)!=null;
+    }
+
+    public String getBlobIDofFile(String fileName) {
+        return filenameToBlob.getOrDefault(fileName, null);
     }
 }

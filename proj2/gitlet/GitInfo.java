@@ -38,7 +38,7 @@ public class GitInfo implements Serializable {
         branchMap.put(getCurrentBranchName(), commitID);
     }
 
-    public String getHEAD() {
+    public String getHEADID() {
         return HEAD;
     }
 
@@ -62,9 +62,13 @@ public class GitInfo implements Serializable {
         branchMap.remove(branchName);
     }
 
-    public Commit getHEADOfBranch(String branchName) {
+    public Commit getHEADCommitOfBranch(String branchName) {
         String commitID = branchMap.get(branchName);
         return Repository.getCommitFromID(commitID);
+    }
+
+    public String getHEADOfBranch(String branchName) {
+        return branchMap.get(branchName);
     }
 
     public void changeBranch(String branchName) {
