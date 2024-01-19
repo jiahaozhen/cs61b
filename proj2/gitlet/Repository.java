@@ -324,7 +324,7 @@ public class Repository {
             System.out.println("No changes added to the commit.");
             System.exit(0);
         }
-        String message = "Merged" + branchName + "into" + gitInfo.getCurrentBranchName() + ".";
+        String message = "Merged " + branchName + " into " + gitInfo.getCurrentBranchName() + ".";
         Commit mergeCommit = new Commit(message, currentHEAD, branchHEAD);
         if (haveConflict) {
             System.out.println("Encountered a merge conflict.");
@@ -474,23 +474,36 @@ public class Repository {
     private static String getSplitPointID(String branchName) {
         /* the set of all the commit that is in the current branch */
         Commit commit = getCurrentCommit();
-        Set<String> commitIDOfCurrentBranch = new HashSet<>();
-        commitIDOfCurrentBranch.add(commit.generateID());
-        while (commit.haveParent()) {
-            commit = commit.getParentCommit();
-            commitIDOfCurrentBranch.add(commit.generateID());
-        }
         GitInfo gitInfo = readObject(GIT_INFO, GitInfo.class);
         Commit branchCommit = gitInfo.getHEADCommitOfBranch(branchName);
-        do {
+        /* Set<String> commitIDOfCurrentBranch = new HashSet<>();
+        commitIDOfCurrentBranch.add(commit.generateID());
+        while (commit.haveParent()) {
+            commit = commit.getParent0Commit();
+            commitIDOfCurrentBranch.add(commit.generateID());
+        } */
+        Map<String, Integer> currentAncestor = commit.getAncestor();
+        Map<String, Integer> givenAncestor = branchCommit.getAncestor();
+        Integer depth = 999;
+        String splitPoint = null;
+        for (String commitID : currentAncestor.keySet()) {
+            if (givenAncestor.containsKey(commitID)) {
+                Integer tempDepth = givenAncestor.get(commitID);
+                if (tempDepth < depth) {
+                    splitPoint = commitID;
+                    depth = tempDepth;
+                }
+            }
+        }
+        /* do {
             String branchCommitID = branchCommit.generateID();
             if (commitIDOfCurrentBranch.contains(branchCommitID)) {
                 return branchCommitID;
             } else {
-                branchCommit = branchCommit.getParentCommit();
+                branchCommit = branchCommit.getParent0Commit();
             }
-        } while (branchCommit != null);
-        return null;
+        } while (branchCommit != null); */
+        return splitPoint;
     }
 
     private static void dealWithConflict(String fileName, String blobID1, String blobID2) {
@@ -498,20 +511,20 @@ public class Repository {
         String content2;
         File fileToWrite = join(CWD, fileName);
         if (blobID1 == null) {
-            content1 = "\n";
+            content1 = "";
         } else {
             Blob blob1 = readObject(join(BLOB_DIR, blobID1), Blob.class);
             content1 = blob1.getFileContent();
         }
         if (blobID2 == null) {
-            content2 = "\n";
+            content2 = "";
         } else {
             Blob blob2 = readObject(join(BLOB_DIR, blobID2), Blob.class);
             content2 = blob2.getFileContent();
         }
         String toWrite = "<<<<<<< HEAD\n" + content1
                 + "=======\n" + content2
-                + ">>>>>>>\n";
+                + ">>>>>>>";
         writeContents(fileToWrite, toWrite);
         add(fileName);
     }
@@ -573,4 +586,5 @@ public class Repository {
         }
         return haveConflict;
     }
+
 }

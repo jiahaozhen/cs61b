@@ -143,8 +143,17 @@ public class Commit implements Serializable {
                 this.parents.toString(), this.filenameToBlob.toString());
     }
 
-    public Commit getParentCommit() {
+    public Commit getParent0Commit() {
         String parentCommitID = parents.get(0);
+        if (parentCommitID != null) {
+            return Repository.getCommitFromID(parentCommitID);
+        } else {
+            return null;
+        }
+    }
+
+    public Commit getParent1Commit() {
+        String parentCommitID = parents.get(1);
         if (parentCommitID != null) {
             return Repository.getCommitFromID(parentCommitID);
         } else {
@@ -159,4 +168,25 @@ public class Commit implements Serializable {
     public String getBlobIDofFile(String fileName) {
         return filenameToBlob.getOrDefault(fileName, null);
     }
+
+
+    public Map<String, Integer> getAncestor() {
+        return getAncestorHelper(0);
+    }
+
+    private Map<String, Integer> getAncestorHelper(int depth) {
+        Map<String, Integer> ancestorCommit = new HashMap<>();
+        ancestorCommit.put(this.generateID(), depth);
+        if (!haveParent()) {
+            return ancestorCommit;
+        }
+        if (parents.get(1) == null) {
+            ancestorCommit.putAll(getParent0Commit().getAncestorHelper(depth + 1));
+            return ancestorCommit;
+        }
+        ancestorCommit.putAll(getParent0Commit().getAncestorHelper(depth + 1));
+        ancestorCommit.putAll(getParent1Commit().getAncestorHelper(depth + 1));
+        return ancestorCommit;
+    }
+
 }
