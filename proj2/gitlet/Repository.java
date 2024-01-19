@@ -523,7 +523,7 @@ public class Repository {
             content2 = blob2.getFileContent();
         }
         String toWrite = "<<<<<<< HEAD\n" + content1
-                + "=======\n" + content2 + ">>>>>>>";
+                + "=======\n" + content2 + ">>>>>>>\n";
         writeContents(fileToWrite, toWrite);
         add(fileName);
     }
