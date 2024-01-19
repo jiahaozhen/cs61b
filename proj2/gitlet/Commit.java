@@ -63,8 +63,8 @@ public class Commit implements Serializable {
         return filenameToBlob.containsValue(blobSha1);
     }
 
-    public void setFilenameToBlob(Map<String, String> FilenameToBlob) {
-        this.filenameToBlob = FilenameToBlob;
+    public void setFilenameToBlob(Map<String, String> filenameToBlob) {
+        this.filenameToBlob = filenameToBlob;
     }
 
     public Map<String, String> getFilenameToBlob() {
@@ -111,7 +111,8 @@ public class Commit implements Serializable {
         System.out.println("commit " + id);
         /* merge information */
         if (parents.get(1) != null) {
-            System.out.println("Merge: " + parents.get(0).substring(0, 7) + " " + parents.get(1).substring(0, 7));
+            System.out.println("Merge: " + parents.get(0).substring(0, 7)
+                    + " " + parents.get(1).substring(0, 7));
         }
         /* the date (copy it from GitHub) */
         DateFormat dateFormat = new SimpleDateFormat("EEE MMM d HH:mm:ss yyyy Z", Locale.ENGLISH);
@@ -125,8 +126,8 @@ public class Commit implements Serializable {
         return filenameToBlob.containsKey(fileName);
     }
 
-    public boolean haveBlob(String BlobID) {
-        return filenameToBlob.containsValue(BlobID);
+    public boolean haveBlob(String blobID) {
+        return filenameToBlob.containsValue(blobID);
     }
 
     public String getMessage() {
@@ -138,7 +139,8 @@ public class Commit implements Serializable {
     }
 
     public String generateID() {
-        return sha1(this.message, this.timestamp.toString(), this.parents.toString(), this.filenameToBlob.toString());
+        return sha1(this.message, this.timestamp.toString(),
+                this.parents.toString(), this.filenameToBlob.toString());
     }
 
     public Commit getParentCommit() {
@@ -151,7 +153,7 @@ public class Commit implements Serializable {
     }
 
     public boolean haveParent() {
-        return parents.get(0)!=null;
+        return parents.get(0) != null;
     }
 
     public String getBlobIDofFile(String fileName) {

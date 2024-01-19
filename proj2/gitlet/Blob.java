@@ -25,8 +25,8 @@ public class Blob implements Serializable {
         return fileContent;
     }
 
-    public void saveFile(File DIR) {
-        File blobFile = join(DIR, generateID());
+    public void saveFile(File dir) {
+        File blobFile = join(dir, generateID());
         try {
             blobFile.createNewFile();
         } catch (IOException e) {

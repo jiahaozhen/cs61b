@@ -33,13 +33,12 @@ public class Repository {
     public static final File STAGING_DIR = join(GITLET_DIR, "staging");
     /** The removed files  **/
     public static final File REMOVEDFILE = join(GITLET_DIR, "removedFiles");
-    private static GitInfo gitInfo;
-    private static RemovedFile removedFiles;
 
     public static void init() {
         /* failure case */
         if (GITLET_DIR.exists()) {
-            System.out.println("A Gitlet version-control system already exists in the current directory.");
+            System.out.println("A Gitlet version-control system already " +
+                    "exists in the current directory.");
             System.exit(0);
         }
         /* make directory */
@@ -47,12 +46,12 @@ public class Repository {
         COMMIT_DIR.mkdir();
         BLOB_DIR.mkdir();
         STAGING_DIR.mkdir();
-        removedFiles = new RemovedFile();
+        RemovedFile removedFiles = new RemovedFile();
         /* create the initial commit */
         Commit initCommit = new Commit("initial commit", null, null);
         initCommit.setDate(new Date(0));
         initCommit.saveCommit();
-        gitInfo = new GitInfo("master", initCommit);
+        GitInfo gitInfo = new GitInfo("master", initCommit);
         gitInfo.saveGitInfo();
     }
 
@@ -90,7 +89,7 @@ public class Repository {
         newCommit.updateFile();
         newCommit.saveCommit();
         /* change the git info */
-        gitInfo = readObject(GIT_INFO, GitInfo.class);
+        GitInfo gitInfo = readObject(GIT_INFO, GitInfo.class);
         gitInfo.addCommit(newCommit);
         gitInfo.saveGitInfo();
     }
@@ -119,7 +118,7 @@ public class Repository {
         /* if the file is in the current commit */
         if (currentCommit.haveFile(fileName)) {
             /* stage it for removal store the filename in removedFiles*/
-            removedFiles = readObject(REMOVEDFILE, RemovedFile.class);
+            RemovedFile removedFiles = readObject(REMOVEDFILE, RemovedFile.class);
             removedFiles.addFile(fileName);
             removedFiles.saveFile();
             /* delete from working directory */
@@ -162,7 +161,7 @@ public class Repository {
 
     public static void status() {
         checkGitletExist();
-        gitInfo = readObject(GIT_INFO, GitInfo.class);
+        GitInfo gitInfo = readObject(GIT_INFO, GitInfo.class);
         /* print the Branch information */
         System.out.println("=== Branches ===");
         List<String> branchNameList = gitInfo.getBranchNames();
@@ -206,10 +205,10 @@ public class Repository {
         System.out.println();
     }
 
-    public static void checkoutFile(String ID, String fileName) {
+    public static void checkoutFile(String id, String fileName) {
         checkGitletExist();
         /* get commit */
-        Commit currentCommit = getCommitFromID(ID);
+        Commit currentCommit = getCommitFromID(id);
         if (currentCommit == null) {
             System.out.println("No commit with that id exists.");
             System.exit(0);
@@ -220,7 +219,7 @@ public class Repository {
     public static void checkoutFile(String fileName) {
         checkGitletExist();
         /* get the HEAD commit */
-        gitInfo = readObject(GIT_INFO, GitInfo.class);
+        GitInfo gitInfo = readObject(GIT_INFO, GitInfo.class);
         Commit currentCommit = getCurrentCommit();
         writeFileToCWD(fileName, currentCommit);
     }
@@ -228,7 +227,7 @@ public class Repository {
     public static void checkoutBranch(String branchName) {
         checkGitletExist();
         /* failure case: branch does not exist */
-        gitInfo = readObject(GIT_INFO, GitInfo.class);
+        GitInfo gitInfo = readObject(GIT_INFO, GitInfo.class);
         if (!gitInfo.haveBranch(branchName)) {
             System.out.println("No such branch exists.");
             System.exit(0);
@@ -250,7 +249,7 @@ public class Repository {
     public static void branch(String branchName) {
         checkGitletExist();
         /* failure case: branch already exist */
-        gitInfo = readObject(GIT_INFO, GitInfo.class);
+        GitInfo gitInfo = readObject(GIT_INFO, GitInfo.class);
         if (gitInfo.haveBranch(branchName)) {
             System.out.println("A branch with that name already exists.");
             System.exit(0);
@@ -264,6 +263,7 @@ public class Repository {
         checkGitletExist();
         /* failure case: branch does not exist */
         checkBranchExist(branchName);
+        GitInfo gitInfo = readObject(GIT_INFO, GitInfo.class);
         /* failure case: try to remove the current branch */
         if (gitInfo.getCurrentBranchName().equals(branchName)) {
             System.out.println("Cannot remove the current branch.");
@@ -285,7 +285,7 @@ public class Repository {
         /* change to the commit */
         changeToCommit(targetCommit);
         /* change the git info */
-        gitInfo = readObject(GIT_INFO, GitInfo.class);
+        GitInfo gitInfo = readObject(GIT_INFO, GitInfo.class);
         gitInfo.reset(targetCommit);
         gitInfo.saveGitInfo();
     }
@@ -295,102 +295,46 @@ public class Repository {
         /* failure cases */
         checkUncommittedChanges();
         checkBranchExist(branchName);
-        gitInfo = readObject(GIT_INFO, GitInfo.class);
+        GitInfo gitInfo = readObject(GIT_INFO, GitInfo.class);
         if (gitInfo.getCurrentBranchName().equals(branchName)) {
             System.out.println("Cannot merge a branch with itself.");
             System.exit(0);
         }
         String splitPointID = getSplitPointID(branchName);
         assert splitPointID != null;
-        String branchHEADID = gitInfo.getHEADOfBranch(branchName);
-        String currentHEADID = gitInfo.getHEADID();
         Commit splitPoint = getCommitFromID(splitPointID);
         Commit branchHEAD = gitInfo.getHEADCommitOfBranch(branchName);
         Commit currentHEAD = getCurrentCommit();
         checkUntrackedFile(branchHEAD);
 
-        boolean haveConflict = false;
         /* case 1: split point is the given branch */
-        if (splitPointID.equals(branchHEADID)){
+        if (splitPointID.equals(branchHEAD.generateID())) {
             System.out.println("Given branch is an ancestor of the current branch.");
             return;
         }
         /* case 2: split point is the current branch */
-        if (splitPointID.equals(currentHEADID)){
+        if (splitPointID.equals(currentHEAD.generateID())) {
             checkoutBranch(branchName);
             System.out.println("Current branch fast-forwarded.");
             return;
         }
-
-        /* every possible files */
-        Set<String> possibleFiles = new HashSet<>();
-        possibleFiles.addAll(splitPoint.getFileNames());
-        possibleFiles.addAll(branchHEAD.getFileNames());
-        possibleFiles.addAll(currentHEAD.getFileNames());
-        /* to the files in the set */
-        for (String fileName: possibleFiles) {
-            /* splitPoint have the file */
-            if (splitPoint.haveFile(fileName)) {
-                String blobID = splitPoint.getBlobIDofFile(fileName);
-                if (branchHEAD.haveBlob(blobID)) {
-                    /* branch have the same file */
-                    continue; /* don't do anything */
-                } else if (currentHEAD.haveBlob(blobID)) {
-                    /* current have the same file, use the branch file */
-                    if (branchHEAD.haveFile(fileName)) {
-                        writeFileToCWD(fileName, branchHEAD);
-                        add(fileName);
-                    } else {
-                        rm(fileName);
-                    }
-                } else {
-                    /* file are modified in both branch */
-                    if (branchHEAD.haveFile(fileName) || currentHEAD.haveFile(fileName)) {
-                        /* deal with conflict */
-                        String blobID1 = currentHEAD.getBlobIDofFile(fileName);
-                        String blobID2 = branchHEAD.getBlobIDofFile(fileName);
-                        dealWithConflict(fileName, blobID1,blobID2);
-                        haveConflict = true;
-                    }
-                }
-            } else {
-                if (!branchHEAD.haveFile(fileName)) {
-                    /* only current branch have the file */
-                    continue;
-                }
-                if (!currentHEAD.haveFile(fileName)) {
-                    /* only given branch have the file */
-                    /* add file to current */
-                    writeFileToCWD(fileName, branchHEAD);
-                    add(fileName);
-                } else {
-                    String blobID1 = currentHEAD.getBlobIDofFile(fileName);
-                    String blobID2 = branchHEAD.getBlobIDofFile(fileName);
-                    if (blobID1.equals(blobID2)){
-                        continue;
-                    } else {
-                        dealWithConflict(fileName, blobID1,blobID2);
-                        haveConflict = true;
-                    }
-                }
-            }
-            if (!Blob.haveStagedAddFiles() && !RemovedFile.haveStagedRemovedFiles()) {
-                System.out.println("No changes added to the commit.");
-                System.exit(0);
-            }
-            String message = "Merged" + branchName + "into" + gitInfo.getCurrentBranchName() + ".";
-            Commit mergeCommit = new Commit(message, currentHEAD, branchHEAD);
-            if (haveConflict) {
-                System.out.println("Encountered a merge conflict.");
-            }
-            mergeCommit.setFilenameToBlob(getCurrentCommit().getFilenameToBlob());
-            /* commit the staged file */
-            mergeCommit.updateFile();
-            mergeCommit.saveCommit();
-            /* change the git info */
-            gitInfo.addCommit(mergeCommit);
-            gitInfo.saveGitInfo();
+        boolean haveConflict = mergeCommit(splitPoint, currentHEAD, branchHEAD);
+        if (!Blob.haveStagedAddFiles() && !RemovedFile.haveStagedRemovedFiles()) {
+            System.out.println("No changes added to the commit.");
+            System.exit(0);
         }
+        String message = "Merged" + branchName + "into" + gitInfo.getCurrentBranchName() + ".";
+        Commit mergeCommit = new Commit(message, currentHEAD, branchHEAD);
+        if (haveConflict) {
+            System.out.println("Encountered a merge conflict.");
+        }
+        mergeCommit.setFilenameToBlob(getCurrentCommit().getFilenameToBlob());
+        /* commit the staged file */
+        mergeCommit.updateFile();
+        mergeCommit.saveCommit();
+        /* change the git info */
+        gitInfo.addCommit(mergeCommit);
+        gitInfo.saveGitInfo();
 
     }
 
@@ -408,9 +352,9 @@ public class Repository {
         List<String> workingFiles = plainFilenamesIn(CWD);
         if (workingFiles != null) {
             for (String fileName : workingFiles) {
-                /* a working file is untracked in the current branch and would be overwritten by the newCommit */
                 if (!trackedFileNames.contains(fileName) && newFileNames.contains(fileName)) {
-                    System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
+                    System.out.println("There is an untracked file in the way; " +
+                            "delete it, or add and commit it first.");
                     System.exit(0);
                 }
             }
@@ -425,7 +369,7 @@ public class Repository {
     }
 
     private static void checkBranchExist(String branchName) {
-        gitInfo = readObject(GIT_INFO, GitInfo.class);
+        GitInfo gitInfo = readObject(GIT_INFO, GitInfo.class);
         if (!gitInfo.haveBranch(branchName)) {
             System.out.println("A branch with that name does not exist.");
             System.exit(0);
@@ -434,8 +378,8 @@ public class Repository {
     
     static Commit getCurrentCommit() {
         GitInfo presentInfo = readObject(GIT_INFO, GitInfo.class);
-        String HEAD = presentInfo.getHEADID();
-        return getCommitFromID(HEAD);
+        String head = presentInfo.getHEADID();
+        return getCommitFromID(head);
     }
 
     static Commit getCommitFromID(String commitID) {
@@ -465,10 +409,11 @@ public class Repository {
         return false;
     }
 
-    private static void writeFileToCWD(String fileName, Commit commit){
+    private static void writeFileToCWD(String fileName, Commit commit) {
         /* get blob name from commit */
         Map<String, String> fileNameToBlob = commit.getFilenameToBlob();
-        if (!fileNameToBlob.containsKey(fileName)) {/* failure case: file does not exist in the commit*/
+        if (!fileNameToBlob.containsKey(fileName)) {
+            /* failure case: file does not exist in the commit*/
             System.out.println("File does not exist in that commit.");
             System.exit(0);
         }
@@ -488,7 +433,7 @@ public class Repository {
     }
 
     private static void removeFileInRemovedFiles(String fileName) {
-        removedFiles = readObject(REMOVEDFILE, RemovedFile.class);
+        RemovedFile removedFiles = readObject(REMOVEDFILE, RemovedFile.class);
         removedFiles.removeFile(fileName);
         removedFiles.saveFile();
     }
@@ -501,7 +446,7 @@ public class Repository {
                 stagedFile.delete();
             }
         }
-        removedFiles = readObject(REMOVEDFILE, RemovedFile.class);
+        RemovedFile removedFiles = readObject(REMOVEDFILE, RemovedFile.class);
         removedFiles.clear();
         removedFiles.saveFile();
     }
@@ -534,7 +479,7 @@ public class Repository {
             commit = commit.getParentCommit();
             commitIDOfCurrentBranch.add(commit.generateID());
         }
-        gitInfo = readObject(GIT_INFO, GitInfo.class);
+        GitInfo gitInfo = readObject(GIT_INFO, GitInfo.class);
         Commit branchCommit = gitInfo.getHEADCommitOfBranch(branchName);
         do {
             String branchCommitID = branchCommit.generateID();
@@ -547,7 +492,7 @@ public class Repository {
         return null;
     }
 
-    private static void dealWithConflict(String fileName, String blobID1, String blobID2){
+    private static void dealWithConflict(String fileName, String blobID1, String blobID2) {
         String content1;
         String content2;
         File fileToWrite = join(STAGING_DIR, fileName);
@@ -563,12 +508,68 @@ public class Repository {
             Blob blob2 = readObject(join(STAGING_DIR, blobID2), Blob.class);
             content2 = blob2.getFileContent();
         }
-        String toWrite = "<<<<<<< HEAD\n" +
-                content1 +
-                "=======\n" +
-                content2 +
-                ">>>>>>>\n";
+        String toWrite = "<<<<<<< HEAD\n" + content1
+                + "=======\n" + content2
+                + ">>>>>>>\n";
         writeContents(fileToWrite, toWrite);
         add(fileName);
+    }
+
+    private static boolean mergeCommit(Commit splitPoint, Commit currentHEAD, Commit branchHEAD) {
+        boolean haveConflict = false;
+        /* every possible files */
+        Set<String> possibleFiles = new HashSet<>();
+        possibleFiles.addAll(splitPoint.getFileNames());
+        possibleFiles.addAll(branchHEAD.getFileNames());
+        possibleFiles.addAll(currentHEAD.getFileNames());
+        /* to the files in the set */
+        for (String fileName: possibleFiles) {
+            /* splitPoint have the file */
+            if (splitPoint.haveFile(fileName)) {
+                String blobID = splitPoint.getBlobIDofFile(fileName);
+                if (branchHEAD.haveBlob(blobID)) {
+                    /* branch have the same file */
+                    continue; /* don't do anything */
+                } else if (currentHEAD.haveBlob(blobID)) {
+                    /* current have the same file, use the branch file */
+                    if (branchHEAD.haveFile(fileName)) {
+                        writeFileToCWD(fileName, branchHEAD);
+                        add(fileName);
+                    } else {
+                        rm(fileName);
+                    }
+                } else {
+                    /* file are modified in both branch */
+                    if (branchHEAD.haveFile(fileName) || currentHEAD.haveFile(fileName)) {
+                        /* deal with conflict */
+                        String blobID1 = currentHEAD.getBlobIDofFile(fileName);
+                        String blobID2 = branchHEAD.getBlobIDofFile(fileName);
+                        dealWithConflict(fileName, blobID1, blobID2);
+                        haveConflict = true;
+                    }
+                }
+            } else {
+                if (!branchHEAD.haveFile(fileName)) {
+                    /* only current branch have the file */
+                    continue;
+                }
+                if (!currentHEAD.haveFile(fileName)) {
+                    /* only given branch have the file */
+                    /* add file to current */
+                    writeFileToCWD(fileName, branchHEAD);
+                    add(fileName);
+                } else {
+                    String blobID1 = currentHEAD.getBlobIDofFile(fileName);
+                    String blobID2 = branchHEAD.getBlobIDofFile(fileName);
+                    if (blobID1.equals(blobID2)) {
+                        continue;
+                    } else {
+                        dealWithConflict(fileName, blobID1, blobID2);
+                        haveConflict = true;
+                    }
+                }
+            }
+        }
+        return haveConflict;
     }
 }
