@@ -43,7 +43,7 @@ public class GitInfo implements Serializable {
     }
 
     public List<String> getBranchNames() {
-        return (List<String>) branchMap.keySet();
+        return new ArrayList<>(branchMap.keySet());
     }
 
     public String getCurrentBranchName() {
