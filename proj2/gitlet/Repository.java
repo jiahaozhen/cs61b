@@ -78,7 +78,7 @@ public class Repository {
             System.exit(0);
         }
         /* failure case: no file to commit */
-        if (plainFilenamesIn(STAGING_DIR) == null) {
+        if (!Blob.haveStagedAddFiles() && !RemovedFile.haveStagedRemovedFiles()) {
             System.out.println("No changes added to the commit.");
             System.exit(0);
         }
@@ -496,17 +496,17 @@ public class Repository {
     private static void dealWithConflict(String fileName, String blobID1, String blobID2) {
         String content1;
         String content2;
-        File fileToWrite = join(STAGING_DIR, fileName);
+        File fileToWrite = join(CWD, fileName);
         if (blobID1 == null) {
             content1 = "\n";
         } else {
-            Blob blob1 = readObject(join(STAGING_DIR, blobID1), Blob.class);
+            Blob blob1 = readObject(join(BLOB_DIR, blobID1), Blob.class);
             content1 = blob1.getFileContent();
         }
         if (blobID2 == null) {
             content2 = "\n";
         } else {
-            Blob blob2 = readObject(join(STAGING_DIR, blobID2), Blob.class);
+            Blob blob2 = readObject(join(BLOB_DIR, blobID2), Blob.class);
             content2 = blob2.getFileContent();
         }
         String toWrite = "<<<<<<< HEAD\n" + content1

@@ -38,7 +38,7 @@ public class Commit implements Serializable {
             parents.add(0, null);
         }
         if (parent2 != null) {
-            parents.set(1, parent2.generateID());
+            parents.add(1, parent2.generateID());
         } else {
             parents.add(1, null);
         }
