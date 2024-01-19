@@ -18,10 +18,12 @@ public class RemovedFile implements Serializable {
 
     public void saveFile() {
         File saveFile = Repository.REMOVEDFILE;
-        try {
-            saveFile.createNewFile();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        if (!saveFile.exists()) {
+            try {
+                saveFile.createNewFile();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
         writeObject(saveFile, this);
     }

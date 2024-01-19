@@ -15,7 +15,7 @@ public class GitInfo implements Serializable {
         HEAD = initCommit.generateID();
         branchMap = new HashMap<>();
         branchMap.put(branchName, HEAD);
-        currentBranchName = HEAD;
+        currentBranchName = branchName;
     }
 
     public void saveGitInfo() {
