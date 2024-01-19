@@ -37,8 +37,8 @@ public class Repository {
     public static void init() {
         /* failure case */
         if (GITLET_DIR.exists()) {
-            System.out.println("A Gitlet version-control system already " +
-                    "exists in the current directory.");
+            System.out.println("A Gitlet version-control system already "
+                    + "exists in the current directory.");
             System.exit(0);
         }
         /* make directory */
@@ -150,7 +150,7 @@ public class Repository {
             File currentCommitFile = join(COMMIT_DIR, commitName);
             Commit currentCommit = readObject(currentCommitFile, Commit.class);
             if (currentCommit.getMessage().equals(message)) {
-                currentCommit.printCommit();
+                System.out.println(commitName);
                 commitExist = true;
             }
         }
@@ -168,9 +168,10 @@ public class Repository {
         branchNameList.sort(Comparator.naturalOrder());
         for (String branchName : branchNameList) {
             if (branchName.equals(gitInfo.getCurrentBranchName())) {
-                System.out.print("*");
+                System.out.println("*" + branchName);
+            } else {
+                System.out.println(branchName);
             }
-            System.out.println(branchName);
         }
         System.out.println();
         /* print the Staged Files */
@@ -353,8 +354,8 @@ public class Repository {
         if (workingFiles != null) {
             for (String fileName : workingFiles) {
                 if (!trackedFileNames.contains(fileName) && newFileNames.contains(fileName)) {
-                    System.out.println("There is an untracked file in the way; " +
-                            "delete it, or add and commit it first.");
+                    System.out.println("There is an untracked file in the way; "
+                            + "delete it, or add and commit it first.");
                     System.exit(0);
                 }
             }
