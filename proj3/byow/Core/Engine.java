@@ -2,6 +2,9 @@ package byow.Core;
 
 import byow.TileEngine.TERenderer;
 import byow.TileEngine.TETile;
+import byow.TileEngine.Tileset;
+
+import java.util.*;
 
 public class Engine {
     TERenderer ter = new TERenderer();
@@ -45,8 +48,54 @@ public class Engine {
         //
         // See proj3.byow.InputDemo for a demo of how you can make a nice clean interface
         // that works for many different input types.
-
-        TETile[][] finalWorldFrame = null;
+        TETile[][] finalWorldFrame = new TETile[WIDTH][HEIGHT];
+        long seed = Long.parseLong(input.substring(1,input.length()-1));
+        Random random = new Random(seed);
+        /* fill with wall */
+        fillWithWall(finalWorldFrame);
+        /* the starter position */
+        Position starter = getRandomPosition(random);
+        finalWorldFrame[starter.getX()][starter.getY()] = Tileset.FLOOR;
+        /* spread from the start */
+        spreadFromStarter(finalWorldFrame, starter, random);
+        ter.initialize(WIDTH, HEIGHT);
+        ter.renderFrame(finalWorldFrame);
         return finalWorldFrame;
+    }
+
+    private Position getRandomPosition(Random random) {
+        int px = RandomUtils.uniform(random, 0, WIDTH);
+        int py = RandomUtils.uniform(random, 0, HEIGHT);
+        return new Position(px, py);
+    }
+
+    private void spreadFromStarter(TETile[][] frame, Position starter, Random random) {
+        for (Position neighbour : starter.getNeighbour()) {
+            if (frame[neighbour.getX()][neighbour.getY()] != Tileset.WALL) {
+                continue;
+            }
+            boolean flag = RandomUtils.bernoulli(random, 0.5);
+            if (flag) {
+                frame[neighbour.getX()][neighbour.getY()] = Tileset.FLOOR;
+                spreadFromStarter(frame, neighbour, random);
+            } else {
+                frame[neighbour.getX()][neighbour.getY()] = Tileset.WALL;
+            }
+        }
+    }
+
+    public static void main(String[] args) {
+        Engine engine = new Engine();
+        engine.interactWithInputString(args[1]);
+    }
+
+    private void fillWithWall(TETile[][] tiles) {
+        int height = tiles[0].length;
+        int width = tiles.length;
+        for (int x = 0; x < width; x += 1) {
+            for (int y = 0; y < height; y += 1) {
+                tiles[x][y] = Tileset.WALL;
+            }
+        }
     }
 }
